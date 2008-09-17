@@ -2,6 +2,7 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
-bin/sexp_processor
+lib/sexp.rb
 lib/sexp_processor.rb
+test/test_sexp.rb
 test/test_sexp_processor.rb
