@@ -1,6 +1,5 @@
-=== 1.0.0 / 2008-09-17
+=== 3.0.0 / 2008-09-17
 
 * 1 major enhancement
 
-  * Birthday!
-
+  * Released as its own project, splitting from ParseTree

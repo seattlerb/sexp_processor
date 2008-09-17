@@ -68,14 +68,6 @@ class TestSexp < SexpTestCase # ZenTest FULL
     @bad1 = s(:blah, 42)
   end
 
-  def test_class_for
-    sexp = Sexp.for SexpFor
-    assert_equal s(:class, :"TestSexp::SexpFor"), sexp[0..1]
-
-    sexp = Sexp.for SexpFor, :method
-    assert_equal s(:defn, :method), sexp[0..1]
-  end
-
   def test_class_from_array
 #    raise NotImplementedError, 'Need to write test_class_from_array'
   end
