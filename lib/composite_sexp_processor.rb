@@ -26,7 +26,7 @@ class CompositeSexpProcessor < SexpProcessor
 
   def <<(processor)
     raise ArgumentError, "Can only add sexp processors" unless
-      SexpProcessor === processor
+      SexpProcessor === processor || processor.respond_to?(:process)
     @processors << processor
   end
 
