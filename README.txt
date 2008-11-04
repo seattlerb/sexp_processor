@@ -1,32 +1,45 @@
 = SexpProcessor
 
-* FIX (url)
+* http://rubyforge.org/projects/parsetree/
 
 == DESCRIPTION:
 
-FIX (describe your package)
+sexp_processor branches from ParseTree bringing all the generic sexp
+processing tools with it. Sexp, SexpProcessor, Environment, etc... all
+for your language processing pleasure.
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+* Includes SexpProcessor and CompositeSexpProcessor.
+
+  * Allows you to write very clean filters.
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+  class MyProcessor < SexpProcessor
+    def initialize
+      super
+      self.strict = false
+    end
+    def process_lit(exp)
+      val = exp.shift
+      return val
+    end
+  end
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* rubygems
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+* sudo gem install sexp_processor
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2008 FIX
+Copyright (c) 2008 Ryan Davis, Seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
