@@ -9,6 +9,9 @@ $TESTING ||= false # unless defined $TESTING
 
 class Sexp < Array # ZenTest FULL
 
+  attr_writer :line
+  attr_accessor :file, :comments
+
   @@array_types = [ :array, :args, ]
 
   ##
@@ -131,7 +134,11 @@ class Sexp < Array # ZenTest FULL
 
   def inspect # :nodoc:
     sexp_str = self.map {|x|x.inspect}.join(', ')
-    return "s(#{sexp_str})"
+    if line && ENV['VERBOSE'] then
+      "s(#{sexp_str}).line(#{line})"
+    else
+      "s(#{sexp_str})"
+    end
   end
 
   def find_node name, delete = false
@@ -149,8 +156,25 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  ##
+  # Find every node with type +name+.
+
   def find_nodes name
     find_all { | sexp | Sexp === sexp and sexp.first == name }
+  end
+
+  ##
+  # If passed a line number, sets the line and returns self. Otherwise
+  # returns the line number. This allows you to do message cascades
+  # and still get the sexp back.
+
+  def line(n=nil)
+    if n then
+      @line = n
+      self
+    else
+      @line ||= nil
+    end
   end
 
   ##
@@ -167,7 +191,14 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
-  # Returns the Sexp without the node_type.
+  # Returns the node type of the Sexp.
+
+  def sexp_type
+    first
+  end
+
+  ##
+  # Returns the Sexp body, ie the values without the node type.
 
   def sexp_body
     self[1..-1]
