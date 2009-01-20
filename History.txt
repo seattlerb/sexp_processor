@@ -1,3 +1,11 @@
+=== 3.0.1 / 2009-01-20
+
+* 3 minor enhancements:
+
+  * Filled out README
+  * Promoted file/line/comments from ruby_parser.
+  * Added sexp_type to compliment sexp_body.
+
 === 3.0.0 / 2008-10-22
 
 * 2 major enhancements:
