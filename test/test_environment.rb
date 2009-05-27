@@ -2,11 +2,10 @@
 
 $TESTING = true
 
-require 'test/unit' if $0 == __FILE__
-require 'test/unit/testcase'
+require 'minitest/autorun'
 require 'sexp_processor'
 
-class TestEnvironment < Test::Unit::TestCase
+class TestEnvironment < MiniTest::Unit::TestCase
 
   def setup
     @env = SexpProcessor::Environment.new

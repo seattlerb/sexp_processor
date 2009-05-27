@@ -2,20 +2,12 @@
 
 $TESTING = true
 
-require 'test/unit' if $0 == __FILE__ unless defined? $ZENTEST and $ZENTEST
-require 'test/unit/testcase'
+require 'minitest/autorun'
 require 'sexp_processor'
 require 'stringio'
 require 'pp'
 
-class SexpTestCase < Test::Unit::TestCase
-
-  unless defined? Mini then
-    alias :refute_nil :assert_not_nil
-    alias :refute_equal :assert_not_equal
-    alias :assert_raises :assert_raise
-  end
-
+class SexpTestCase < MiniTest::Unit::TestCase
   # KEY for regex tests
   # :a == no change
   # :b == will change (but sometimes ONLY once)

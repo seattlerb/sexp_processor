@@ -10,6 +10,7 @@ require './lib/sexp_processor.rb'
 Hoe.new('sexp_processor', SexpProcessor::VERSION) do |sexp|
   sexp.rubyforge_name = 'parsetree'
   sexp.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
+  sexp.testlib = :minitest
 end
 
 # vim: syntax=Ruby

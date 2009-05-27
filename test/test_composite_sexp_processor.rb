@@ -3,7 +3,7 @@
 $TESTING = true
 
 require 'composite_sexp_processor'
-require 'test/unit'
+require 'minitest/autorun'
 
 class FakeProcessor1 < SexpProcessor # ZenTest SKIP
 
@@ -24,7 +24,7 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
   end
 end
 
-class TestCompositeSexpProcessor < Test::Unit::TestCase
+class TestCompositeSexpProcessor < MiniTest::Unit::TestCase
 
   def setup
     @p = CompositeSexpProcessor.new

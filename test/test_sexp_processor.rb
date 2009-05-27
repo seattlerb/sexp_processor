@@ -4,7 +4,7 @@ $TESTING = true
 
 require 'sexp_processor'
 require 'stringio'
-require 'test/unit'
+require 'minitest/autorun'
 require 'pp'
 
 # Fake test classes:
@@ -93,7 +93,7 @@ end
 
 # Real test classes:
 
-class TestSexpProcessor < Test::Unit::TestCase
+class TestSexpProcessor < MiniTest::Unit::TestCase
 
   def setup
     @processor = TestProcessor.new
