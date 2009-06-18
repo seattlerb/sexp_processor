@@ -5,12 +5,12 @@ require 'hoe'
 
 Hoe.add_include_dirs "lib"
 
-require './lib/sexp_processor.rb'
+Hoe.plugin :seattlerb
 
-Hoe.new('sexp_processor', SexpProcessor::VERSION) do |sexp|
-  sexp.rubyforge_name = 'parsetree'
-  sexp.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
-  sexp.testlib = :minitest
+Hoe.spec 'sexp_processor' do
+  developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
+
+  self.rubyforge_name = 'parsetree'
 end
 
-# vim: syntax=Ruby
+# vim: syntax=ruby
