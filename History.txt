@@ -1,3 +1,10 @@
+=== 3.0.2 / 2009-06-23
+
+* 2 minor enhancements:
+
+  * Pulled unique.rb from ParseTree to sexp_processor.
+  * Switched to minitest.
+
 === 3.0.1 / 2009-01-20
 
 * 3 minor enhancements:
