@@ -178,6 +178,13 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
+  # Returns the size of the sexp, flattened.
+
+  def mass
+    @mass ||= self.structure.flatten.size
+  end
+
+  ##
   # Returns the node named +node+, deleting it if +delete+ is true.
 
   def method_missing meth, delete = false
