@@ -3,8 +3,6 @@
 require 'rubygems'
 require 'hoe'
 
-Hoe.add_include_dirs "lib"
-
 Hoe.plugin :seattlerb
 
 Hoe.spec 'sexp_processor' do
