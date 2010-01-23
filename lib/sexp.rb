@@ -192,7 +192,10 @@ class Sexp < Array # ZenTest FULL
   end
 
   def pretty_print(q) # :nodoc:
-    q.group(1, 's(', ')') do
+    nnd = ')'
+    nnd << ".line(#{line})" if line && ENV['VERBOSE']
+
+    q.group(1, 's(', nnd) do
       q.seplist(self) {|v| q.pp v }
     end
   end
