@@ -1,3 +1,9 @@
+=== 3.0.4 / 2010-03-27
+
+* 1 minor enhancement:
+
+  * Added line number to pretty_print output if $VERBOSE
+
 === 3.0.3 / 2009-08-14
 
 * 1 minor enhancement:
