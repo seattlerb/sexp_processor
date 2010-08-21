@@ -121,9 +121,9 @@ class SexpProcessor
     public_methods.each do |name|
       case name
       when /^process_(.*)/ then
-        @processors[$1.intern] = name.intern
+        @processors[$1.to_sym] = name.to_sym
       when /^rewrite_(.*)/ then
-        @rewriters[$1.intern]  = name.intern
+        @rewriters[$1.to_sym]  = name.to_sym
       end
     end
   end
@@ -139,11 +139,9 @@ class SexpProcessor
   def rewrite(exp)
     type = exp.first
 
-    self.context.unshift type
-
-    exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
-
-    self.context.shift
+    in_context type do
+      exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
+    end
 
     begin
       meth = @rewriters[type]
@@ -165,7 +163,7 @@ class SexpProcessor
     exp = self.rewrite(exp) if self.context.empty?
 
     unless @unsupported_checked then
-      m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').intern }
+      m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').to_sym }
       supported = m - (m - @unsupported)
 
       raise UnsupportedNodeError, "#{supported.inspect} shouldn't be in @unsupported" unless supported.empty?
@@ -179,75 +177,74 @@ class SexpProcessor
     raise "type should be a Symbol, not: #{exp.first.inspect}" unless
       Symbol === type
 
-    self.context.unshift type
-
-    if @debug.has_key? type then
-      str = exp.inspect
-      puts "// DEBUG: #{str}" if str =~ @debug[type]
-    end
-
-    exp_orig = nil
-    exp_orig = exp.deep_clone if $DEBUG or
-      @debug.has_key? type or @exceptions.has_key?(type)
-
-    raise UnsupportedNodeError, "'#{type}' is not a supported node type" if
-      @unsupported.include? type
-
-    if @debug.has_key? type then
-      str = exp.inspect
-      puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
-    end
-
-    # now do a pass with the real processor (or generic)
-    meth = @processors[type] || @default_method
-    if meth then
-
-      if @warn_on_default and meth == @default_method then
-        warn "WARNING: Using default method #{meth} for #{type}"
+    in_context type do
+      if @debug.has_key? type then
+        str = exp.inspect
+        puts "// DEBUG: #{str}" if str =~ @debug[type]
       end
 
-      exp.shift if @auto_shift_type and meth != @default_method
+      exp_orig = nil
+      exp_orig = exp.deep_clone if $DEBUG or
+        @debug.has_key? type or @exceptions.has_key?(type)
 
-      result = error_handler(type, exp_orig) do
-        self.send(meth, exp)
+      raise UnsupportedNodeError, "'#{type}' is not a supported node type" if
+        @unsupported.include? type
+
+      if @debug.has_key? type then
+        str = exp.inspect
+        puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
       end
 
-      raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
+      # now do a pass with the real processor (or generic)
+      meth = @processors[type] || @default_method
+      if meth then
 
-      self.assert_empty(meth, exp, exp_orig) if @require_empty
-    else
-      unless @strict then
-        until exp.empty? do
-          sub_exp = exp.shift
-          sub_result = nil
-          if Array === sub_exp then
-            sub_result = error_handler(type, exp_orig) do
-              process(sub_exp)
-            end
-            raise "Result is a bad type" unless Array === sub_exp
-            raise "Result does not have a type in front: #{sub_exp.inspect}" unless Symbol === sub_exp.first unless sub_exp.empty?
-          else
-            sub_result = sub_exp
-          end
-          result << sub_result
+        if @warn_on_default and meth == @default_method then
+          warn "WARNING: Using default method #{meth} for #{type}"
         end
 
-        # NOTE: this is costly, but we are in the generic processor
-        # so we shouldn't hit it too much with RubyToC stuff at least.
-        #if Sexp === exp and not exp.sexp_type.nil? then
-        begin
-          result.sexp_type = exp.sexp_type
-        rescue Exception
-          # nothing to do, on purpose
+        exp.shift if @auto_shift_type and meth != @default_method
+
+        result = error_handler(type, exp_orig) do
+          self.send(meth, exp)
         end
+
+        raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
+
+        self.assert_empty(meth, exp, exp_orig) if @require_empty
       else
-        msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
-        msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG
-        raise UnknownNodeError, msg
+        unless @strict then
+          until exp.empty? do
+            sub_exp = exp.shift
+            sub_result = nil
+            if Array === sub_exp then
+              sub_result = error_handler(type, exp_orig) do
+                process(sub_exp)
+              end
+              raise "Result is a bad type" unless Array === sub_exp
+              raise "Result does not have a type in front: #{sub_exp.inspect}" unless Symbol === sub_exp.first unless sub_exp.empty?
+            else
+              sub_result = sub_exp
+            end
+            result << sub_result
+          end
+
+          # NOTE: this is costly, but we are in the generic processor
+          # so we shouldn't hit it too much with RubyToC stuff at least.
+          #if Sexp === exp and not exp.sexp_type.nil? then
+          begin
+            result.sexp_type = exp.sexp_type
+          rescue Exception
+            # nothing to do, on purpose
+          end
+        else
+          msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
+          msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG
+          raise UnknownNodeError, msg
+        end
       end
     end
 
-    self.context.shift
     result
   end
 
@@ -321,6 +318,14 @@ class SexpProcessor
 
   def scope &block
     env.scope(&block)
+  end
+
+  def in_context type
+    self.context.unshift type
+
+    yield
+
+    self.context.shift
   end
 
   ##
