@@ -134,7 +134,7 @@ class Sexp < Array # ZenTest FULL
 
   def inspect # :nodoc:
     sexp_str = self.map {|x|x.inspect}.join(', ')
-    if line && ENV['VERBOSE'] then
+    if ENV['VERBOSE'] && line then
       "s(#{sexp_str}).line(#{line})"
     else
       "s(#{sexp_str})"
