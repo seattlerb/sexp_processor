@@ -1,3 +1,10 @@
+=== 3.0.5 / 2010-09-01
+
+* 2 minor enhancements:
+
+  * Added in_context to clean up code.
+  * optimize inspect to avoid needlessly caching @line
+
 === 3.0.4 / 2010-03-27
 
 * 1 minor enhancement:
