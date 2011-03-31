@@ -3,6 +3,7 @@ Manifest.txt
 README.txt
 Rakefile
 lib/composite_sexp_processor.rb
+lib/pt_testcase.rb
 lib/sexp.rb
 lib/sexp_processor.rb
 lib/unique.rb
