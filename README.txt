@@ -1,5 +1,7 @@
 = SexpProcessor
 
+home :: https://github.com/seattlerb/sexp_processor
+rdoc :: http://parsetree.rubyforge.org/sexp_processor
 * http://rubyforge.org/projects/parsetree/
 
 == DESCRIPTION:
@@ -39,7 +41,7 @@ for your language processing pleasure.
 
 (The MIT License)
 
-Copyright (c) 2008 Ryan Davis, Seattle.rb
+Copyright (c) Ryan Davis, seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
