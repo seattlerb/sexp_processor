@@ -71,6 +71,17 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
     end
   end
 
+  def self.add_19tests name, hash
+    return unless RUBY_VERSION >= "1.9"
+    name = "#{name}__19"
+
+    hash.each do |klass, data|
+      warn "testcase #{klass}##{name} already has data" if
+        testcases[name].has_key? klass
+      testcases[name][klass] = data
+    end
+  end
+
   def self.clone_same
     @@testcases.each do |node, data|
       data.each do |key, val|
@@ -1583,6 +1594,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:defn, :f,
                                 s(:args, :mand, :"*rest"),
                                 s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_splat_mand",
+              "Ruby"         => "def f(*rest, mand)\n  # do nothing\nend",
+              "ParseTree"    => s(:defn, :f,
+                                  s(:args, :"*rest", :mand),
+                                  s(:scope, s(:block, s(:nil)))))
 
   add_tests("defn_args_mand_splat_block",
             "Ruby"         => "def f(mand, *rest, &block)\n  # do nothing\nend",
