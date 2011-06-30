@@ -71,15 +71,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
     end
   end
 
+  def self.add_18tests name, hash
+    return unless RUBY_VERSION >= "1.8" and RUBY_VERSION < "1.9"
+    add_tests "#{name}__18", hash
+  end
+
   def self.add_19tests name, hash
     return unless RUBY_VERSION >= "1.9"
-    name = "#{name}__19"
-
-    hash.each do |klass, data|
-      warn "testcase #{klass}##{name} already has data" if
-        testcases[name].has_key? klass
-      testcases[name][klass] = data
-    end
+    add_tests "#{name}__19", hash
   end
 
   def self.clone_same
@@ -1594,12 +1593,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:defn, :f,
                                 s(:args, :mand, :"*rest"),
                                 s(:scope, s(:block, s(:nil)))))
-
-  add_19tests("defn_args_splat_mand",
-              "Ruby"         => "def f(*rest, mand)\n  # do nothing\nend",
-              "ParseTree"    => s(:defn, :f,
-                                  s(:args, :"*rest", :mand),
-                                  s(:scope, s(:block, s(:nil)))))
 
   add_tests("defn_args_mand_splat_block",
             "Ruby"         => "def f(mand, *rest, &block)\n  # do nothing\nend",
@@ -4431,4 +4424,220 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                [:scope, [:block, [:args], [:zsuper]]]],
             "ParseTree"    => s(:defn, :x, s(:args),
                                 s(:scope, s(:block, s(:zsuper)))))
+
+  add_18tests("iter_args_ivar",
+              "Ruby"         => "a { |@a| 42 }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :a],
+                                 [:iasgn, :@a],
+                                 [:lit, 42]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  s(:iasgn, :@a),
+                                  s(:lit, 42)))
+
+  add_18tests("iter_masgn_args_ivar",
+              "Ruby"         => "a { |a, @b| 42 }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :a],
+                                 [:masgn,
+                                  [:array, [:dasgn_curr, :a], [:iasgn, :@b]],
+                                  nil, nil],
+                                 [:lit, 42]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  s(:masgn,
+                                    s(:array, s(:lasgn, :a), s(:iasgn, :@b))),
+                                  s(:lit, 42)))
+
+  add_18tests("str_question_control",
+              "Ruby"         => '?\M-\C-a',
+              "RawParseTree" => [:lit, 129],
+              "ParseTree"    => s(:lit, 129))
+
+  add_18tests("str_question_escape",
+              "Ruby"         => '?\n',
+              "RawParseTree" => [:lit, 10],
+              "ParseTree"    => s(:lit, 10))
+
+  add_18tests("str_question_literal",
+              "Ruby"         => '?a',
+              "RawParseTree" => [:lit, 97],
+              "ParseTree"    => s(:lit, 97))
+
+  add_19tests("call_arglist_norm_hash_colons",
+              "Ruby"         => "o.m(42, a: 1, b: 2)",
+              "RawParseTree" => [:call,
+                                 [:vcall, :o], :m,
+                                 [:array,
+                                  [:lit, 42],
+                                  [:hash,
+                                   [:lit, :a], [:lit, 1],
+                                   [:lit, :b], [:lit, 2]]]],
+              "ParseTree"    => s(:call,
+                                  s(:call, nil, :o, s(:arglist)),
+                                  :m,
+                                  s(:arglist,
+                                    s(:lit, 42),
+                                    s(:hash,
+                                      s(:lit, :a), s(:lit, 1),
+                                      s(:lit, :b), s(:lit, 2)))))
+
+  add_19tests("call_not_equal",
+            "Ruby"         => "a != b",
+              "RawParseTree" => [:call, [:vcall, :a], :"!=",
+                                 [:array, [:vcall, :b]]],
+            "ParseTree"    => s(:call,
+                                s(:call, nil, :a, s(:arglist)),
+                                :"!=",
+                                s(:arglist, s(:call, nil, :b, s(:arglist)))))
+
+  add_19tests("call_unary_not",
+              "Ruby"         => "!a",
+              "RawParseTree" => [:call, [:vcall, :a], :"!@"],
+              "ParseTree"    => s(:call,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  :"!@", s(:arglist)))
+
+  add_19tests("defn_args_splat_mand",
+              "Ruby"         => "def f(*rest, mand)\n  # do nothing\nend",
+              "ParseTree"    => s(:defn, :f,
+                                  s(:args, :"*rest", :mand),
+                                  s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_splat_middle",
+            "Ruby"         => "def f(first, *middle, last)\n  # do nothing\nend",
+            "RawParseTree" => [:defn, :f,
+                               [:scope,
+                                [:block,
+                                 [:args, :first, :"*middle", :last],
+                                 [:nil]]]],
+            "ParseTree"    => s(:defn, :f,
+                                s(:args, :first, :"*middle", :last),
+                                s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("fcall_arglist_hash_colons",
+              "Ruby"         => "m(a: 1, b: 2)",
+              "RawParseTree" => [:fcall, :m,
+                                 [:array,
+                                  [:hash,
+                                   [:lit, :a], [:lit, 1],
+                                   [:lit, :b], [:lit, 2]]]],
+              "ParseTree"    => s(:call, nil, :m,
+                                  s(:arglist,
+                                    s(:hash,
+                                      s(:lit, :a), s(:lit, 1),
+                                      s(:lit, :b), s(:lit, 2)))))
+
+  add_19tests("hash_new",
+              "Ruby"         => "{ a: 1, b: 2 }",
+              "RawParseTree" => [:hash,
+                                 [:lit, :a], [:lit, 1],
+                                 [:lit, :b], [:lit, 2]],
+              "ParseTree"    => s(:hash,
+                                  s(:lit, :a), s(:lit, 1),
+                                  s(:lit, :b), s(:lit, 2)))
+
+  add_19tests("lambda_args_0",
+              "Ruby"         => "->(){ (x + 1) }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 0,
+                                 [:call, [:vcall, :x], :+,
+                                  [:array, [:lit, 1]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  0,
+                                  s(:call,
+                                    s(:call, nil, :x, s(:arglist)),
+                                    :+,
+                                    s(:arglist, s(:lit, 1)))))
+
+  add_19tests("lambda_args_1",
+              "Ruby"         => "-> (x) { (x + 1) }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 [:dasgn_curr, :x],
+                                 [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  s(:lasgn, :x),
+                                  s(:call, s(:lvar, :x), :+,
+                                    s(:arglist, s(:lit, 1)))))
+
+  add_19tests("lambda_args_2",
+              "Ruby"         => "-> (x, y) { (x + y) }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 [:masgn, [:array,
+                                           [:dasgn_curr, :x],
+                                           [:dasgn_curr, :y]], nil, nil],
+                                 [:call, [:dvar, :x], :+,
+                                  [:array, [:dvar, :y]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  s(:masgn,
+                                    s(:array,
+                                      s(:lasgn, :x),
+                                      s(:lasgn, :y))),
+                                  s(:call, s(:lvar, :x), :+,
+                                    s(:arglist, s(:lvar, :y)))))
+
+  add_19tests("lambda_args_2_no_parens",
+              "Ruby"         => "->  x, y { (x + y) }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 [:masgn, [:array,
+                                           [:dasgn_curr, :x],
+                                           [:dasgn_curr, :y]], nil, nil],
+                                 [:call, [:dvar, :x], :+,
+                                  [:array, [:dvar, :y]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  s(:masgn,
+                                    s(:array,
+                                      s(:lasgn, :x),
+                                      s(:lasgn, :y))),
+                                  s(:call, s(:lvar, :x), :+,
+                                    s(:arglist, s(:lvar, :y)))))
+
+  add_19tests("lambda_args_no",
+              "Ruby"         => "-> { (x + 1) }",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 nil,
+                                 [:call, [:vcall, :x], :+,
+                                  [:array, [:lit, 1]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  nil,
+                                  s(:call, s(:call, nil, :x, s(:arglist)),
+                                    :+, s(:arglist, s(:lit, 1)))))
+
+  add_19tests("splat_fcall_middle",
+              "Ruby"         => "meth(1, *[2], 3)",
+              "RawParseTree" => [:fcall, :meth,
+                                 [:lit, 1],
+                                 [:splat, [:array, [:lit, 2]]],
+                                 [:lit, 3]],
+              "ParseTree"    => s(:call, nil, :meth,
+                                  s(:arglist,
+                                    s(:lit, 1),
+                                    s(:splat, s(:array, s(:lit, 2))),
+                                    s(:lit, 3))))
+
+  add_19tests("str_question_control",
+              "Ruby"         => '?\M-\C-a',
+              "RawParseTree" => [:str, "\x81"],
+              "ParseTree"    => s(:str, "\x81"))
+
+  add_19tests("str_question_escape",
+              "Ruby"         => '?\n',
+              "RawParseTree" => [:str, "\n"],
+              "ParseTree"    => s(:str, "\n"))
+
+  add_19tests("str_question_literal",
+              "Ruby"         => '?a',
+              "RawParseTree" => [:str, "a"],
+              "ParseTree"    => s(:str, "a"))
 end
