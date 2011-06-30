@@ -4453,17 +4453,20 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_18tests("str_question_control",
               "Ruby"         => '?\M-\C-a',
               "RawParseTree" => [:lit, 129],
-              "ParseTree"    => s(:lit, 129))
+              "ParseTree"    => s(:lit, 129),
+              "Ruby2Ruby"    => "129")
 
   add_18tests("str_question_escape",
               "Ruby"         => '?\n',
               "RawParseTree" => [:lit, 10],
-              "ParseTree"    => s(:lit, 10))
+              "ParseTree"    => s(:lit, 10),
+              "Ruby2Ruby"    => "10")
 
   add_18tests("str_question_literal",
               "Ruby"         => '?a',
               "RawParseTree" => [:lit, 97],
-              "ParseTree"    => s(:lit, 97))
+              "ParseTree"    => s(:lit, 97),
+              "Ruby2Ruby"    => "97")
 
   add_19tests("call_arglist_norm_hash_colons",
               "Ruby"         => "o.m(42, a: 1, b: 2)",
