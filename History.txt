@@ -1,3 +1,13 @@
+=== 3.0.6 / 2011-08-16
+
+* 5 minor enhancements:
+
+  * Added ParseTreeTestCase#add_19tests
+  * Added a bunch of FAILING 1.9 tests stolen from presidentbeef's repo! yay!
+  * Added add_19tests and add_18tests to segregate version specific parsing.
+  * Moved pt_testcase.rb to sexp_processor
+  * Segregated a bunch of 1.8 specific tests using add_18tests.
+
 === 3.0.5 / 2010-09-01
 
 * 2 minor enhancements:
