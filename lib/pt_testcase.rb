@@ -229,7 +229,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby2Ruby"    => "class X\n  alias :y :x\nend")
 
   add_tests("and",
-            "Ruby"         => "(a and b)",
+            "Ruby"         => "a and b",
             "RawParseTree" => [:and, [:vcall, :a], [:vcall, :b]],
             "ParseTree"    => s(:and,
                                 s(:call, nil, :a, s(:arglist)),
