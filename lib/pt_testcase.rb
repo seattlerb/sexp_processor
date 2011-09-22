@@ -1932,8 +1932,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => '/#{1}/n',
             "RawParseTree" => [:dregx, '', [:evstr, [:lit, 1]], /x/n.options],
             "ParseTree"    => s(:dregx, '',
-                                s(:evstr, s(:lit, 1)), /x/n.options),
-            "Ruby2Ruby"    => "/#\{1}/") # HACK - need to support regexp flag
+                                s(:evstr, s(:lit, 1)), /x/n.options))
 
   add_tests("dregx_once",
             "Ruby"         => "/x#\{(1 + 1)}y/o",
@@ -1954,8 +1953,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                [:evstr, [:const, :SB]], /x/n.options],
             "ParseTree"    => s(:dregx_once, '',
                                 s(:evstr, s(:const, :IAC)),
-                                s(:evstr, s(:const, :SB)), /x/n.options),
-            "Ruby2Ruby"    => "/#\{IAC}#\{SB}/o") # HACK
+                                s(:evstr, s(:const, :SB)), /x/n.options))
 
   add_tests("dstr",
             "Ruby"         => "argl = 1\n\"x#\{argl}y\"\n",
