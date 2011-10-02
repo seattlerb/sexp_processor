@@ -4539,6 +4539,15 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:lit, :a), s(:lit, 1),
                                   s(:lit, :b), s(:lit, 2)))
 
+  add_19tests("hash_new_no_space",
+              "Ruby"         => "{a:1,b:2}",
+              "RawParseTree" => [:hash,
+                                 [:lit, :a], [:lit, 1],
+                                 [:lit, :b], [:lit, 2]],
+              "ParseTree"    => s(:hash,
+                                  s(:lit, :a), s(:lit, 1),
+                                  s(:lit, :b), s(:lit, 2)))
+
   add_19tests("lambda_args_0",
               "Ruby"         => "->(){ (x + 1) }",
               "RawParseTree" => [:iter,
