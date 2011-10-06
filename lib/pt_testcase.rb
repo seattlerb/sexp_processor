@@ -4511,6 +4511,38 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:args, :"*rest", :mand),
                                   s(:scope, s(:block, s(:nil)))))
 
+  add_19tests("defn_args_mand_opt_splat_mand",
+              "Ruby"      => "def f(mand1, opt = 42, *rest, mand2)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :mand1, :opt, :"*rest", :mand2,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_mand_opt_mand",
+              "Ruby"      => "def f(mand1, opt = 42, mand2)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :mand1, :opt, :mand2,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_opt_splat_mand",
+              "Ruby"      => "def f(opt = 42, *rest, mand)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :opt, :"*rest", :mand,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_opt_mand",
+              "Ruby"      => "def f(opt = 42, mand)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :opt, :mand,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
   add_19tests("defn_args_splat_middle",
             "Ruby"         => "def f(first, *middle, last)\n  # do nothing\nend",
             "RawParseTree" => [:defn, :f,
