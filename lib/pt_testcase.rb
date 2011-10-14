@@ -846,6 +846,11 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:call, s(:call, nil, :o, s(:arglist)), :puts,
                                 s(:arglist, s(:lit, 42))))
 
+  add_tests("call_no_space_symbol",
+            "Ruby"         => "foo:bar",
+            "RawParseTree" => [:call, nil, :foo, [:array, [:lit, :bar]]],
+            "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))))
+
   add_tests("call_arglist_hash",
             "Ruby"         => "o.m(:a => 1, :b => 2)",
             "RawParseTree" => [:call,
@@ -4506,6 +4511,38 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:args, :"*rest", :mand),
                                   s(:scope, s(:block, s(:nil)))))
 
+  add_19tests("defn_args_mand_opt_splat_mand",
+              "Ruby"      => "def f(mand1, opt = 42, *rest, mand2)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :mand1, :opt, :"*rest", :mand2,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_mand_opt_mand",
+              "Ruby"      => "def f(mand1, opt = 42, mand2)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :mand1, :opt, :mand2,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_opt_splat_mand",
+              "Ruby"      => "def f(opt = 42, *rest, mand)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :opt, :"*rest", :mand,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
+  add_19tests("defn_args_opt_mand",
+              "Ruby"      => "def f(opt = 42, mand)\n  # do nothing\nend",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :opt, :mand,
+                                 s(:block,
+                                   s(:lasgn, :opt, s(:lit, 42)))),
+                               s(:scope, s(:block, s(:nil)))))
+
   add_19tests("defn_args_splat_middle",
             "Ruby"         => "def f(first, *middle, last)\n  # do nothing\nend",
             "RawParseTree" => [:defn, :f,
@@ -4532,6 +4569,15 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_19tests("hash_new",
               "Ruby"         => "{ a: 1, b: 2 }",
+              "RawParseTree" => [:hash,
+                                 [:lit, :a], [:lit, 1],
+                                 [:lit, :b], [:lit, 2]],
+              "ParseTree"    => s(:hash,
+                                  s(:lit, :a), s(:lit, 1),
+                                  s(:lit, :b), s(:lit, 2)))
+
+  add_19tests("hash_new_no_space",
+              "Ruby"         => "{a:1,b:2}",
               "RawParseTree" => [:hash,
                                  [:lit, :a], [:lit, 1],
                                  [:lit, :b], [:lit, 2]],
