@@ -72,12 +72,10 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   end
 
   def self.add_18tests name, hash
-    return unless RUBY_VERSION >= "1.8" and RUBY_VERSION < "1.9"
     add_tests "#{name}__18", hash
   end
 
   def self.add_19tests name, hash
-    return unless RUBY_VERSION >= "1.9"
     add_tests "#{name}__19", hash
   end
 
@@ -98,8 +96,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   end
 
   def self.generate_test klass, node, data, input_name, output_name
-    klass.send(:define_method, "test_#{node}".to_sym) do
+    klass.send :define_method, "test_#{node}" do
       flunk "Processor is nil" if processor.nil?
+
+      if node =~ /(1[89])$/ then
+        version = $1
+        skip "version specific test" unless self.class.name =~ /#{version}/
+      end
 
       assert data.has_key?(input_name), "Unknown input data"
       assert data.has_key?(output_name), "Missing test data"
@@ -128,7 +131,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
         # body into an assertion. It'll allow subclasses to hook in
         # and add behavior before or after the processor does it's
         # thing. If you go the body refactor route, some of the
-        # RawParseTree test casese fail for completely bogus reasons.
+        # RawParseTree test cases fail for completely bogus reasons.
 
         before_process_hook klass, node, data, input_name, output_name
         refute_nil data[input_name], "testcase does not exist?"
