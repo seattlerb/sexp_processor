@@ -854,6 +854,11 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "RawParseTree" => [:call, nil, :foo, [:array, [:lit, :bar]]],
             "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))))
 
+  add_tests("ternary_nil_no_space",
+            "Ruby"         => "1 ? nil: 1",
+            "RawParseTree" => [:if, [:lit, 1], [:nil], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1), s(:nil), s(:lit, 1)))
+
   add_tests("call_arglist_hash",
             "Ruby"         => "o.m(:a => 1, :b => 2)",
             "RawParseTree" => [:call,
