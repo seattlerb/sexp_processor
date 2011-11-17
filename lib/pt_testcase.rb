@@ -4588,6 +4588,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:lit, :a), s(:lit, 1),
                                   s(:lit, :b), s(:lit, 2)))
 
+  add_19tests("lambda_args_block",
+              "Ruby"         => "lambda { |&block| block }",
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  s(:lasgn, :"&block"),
+                                  s(:lvar, :block)))
+
   add_19tests("lambda_args_0",
               "Ruby"         => "->(){ (x + 1) }",
               "RawParseTree" => [:iter,
@@ -4722,23 +4729,23 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:call, s(:lvar, :x), :+,
                                     s(:arglist, s(:lvar, :y)))))
 
-  # add_19tests("lambda_args_2_no_parens_do",
-  #             "Ruby"         => "->  x, y do (x + y) end",
-  #             "RawParseTree" => [:iter,
-  #                                [:fcall, :lambda],
-  #                                [:masgn, [:array,
-  #                                          [:dasgn_curr, :x],
-  #                                          [:dasgn_curr, :y]], nil, nil],
-  #                                [:call, [:dvar, :x], :+,
-  #                                 [:array, [:dvar, :y]]]],
-  #             "ParseTree"    => s(:iter,
-  #                                 s(:call, nil, :lambda, s(:arglist)),
-  #                                 s(:masgn,
-  #                                   s(:array,
-  #                                     s(:lasgn, :x),
-  #                                     s(:lasgn, :y))),
-  #                                 s(:call, s(:lvar, :x), :+,
-  #                                   s(:arglist, s(:lvar, :y)))))
+  add_19tests("lambda_args_2_no_parens_do",
+              "Ruby"         => "->  x, y do (x + y) end",
+              "RawParseTree" => [:iter,
+                                 [:fcall, :lambda],
+                                 [:masgn, [:array,
+                                           [:dasgn_curr, :x],
+                                           [:dasgn_curr, :y]], nil, nil],
+                                 [:call, [:dvar, :x], :+,
+                                  [:array, [:dvar, :y]]]],
+              "ParseTree"    => s(:iter,
+                                  s(:call, nil, :lambda, s(:arglist)),
+                                  s(:masgn,
+                                    s(:array,
+                                      s(:lasgn, :x),
+                                      s(:lasgn, :y))),
+                                  s(:call, s(:lvar, :x), :+,
+                                    s(:arglist, s(:lvar, :y)))))
 
   add_19tests("hash_new_with_keyword",
               "Ruby"         => "{ true: 1, b: 2 }",
