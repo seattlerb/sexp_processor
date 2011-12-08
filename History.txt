@@ -1,3 +1,9 @@
+=== 3.0.9 / 2011-12-07
+
+* 1 minor enhancement:
+
+  * Add missing test for a ternary with nil without a space before the colon (brynary)
+
 === 3.0.8 / 2011-11-16
 
 * 4 minor enhancements:
