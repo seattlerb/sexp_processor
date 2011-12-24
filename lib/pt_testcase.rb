@@ -4479,6 +4479,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "ParseTree"    => s(:lit, 97),
               "Ruby2Ruby"    => "97")
 
+  add_19tests("array_bare_hash",
+              "Ruby"         => "[:a, :b => :c]",
+              "ParseTree"    => s(:array,
+                                  s(:lit, :a),
+                                  s(:hash,
+                                    s(:lit, :b),
+                                    s(:lit, :c))))
+
   add_19tests("call_arglist_norm_hash_colons",
               "Ruby"         => "o.m(42, a: 1, b: 2)",
               "RawParseTree" => [:call,
@@ -4787,4 +4795,5 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "Ruby"         => '?a',
               "RawParseTree" => [:str, "a"],
               "ParseTree"    => s(:str, "a"))
+
 end
