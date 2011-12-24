@@ -4787,4 +4787,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "Ruby"         => '?a',
               "RawParseTree" => [:str, "a"],
               "ParseTree"    => s(:str, "a"))
+
+  add_19tests("bare_hash_at_end_of_array",
+              "Ruby"         => "[:a, :b => :c]",
+              "RawParseTree" => [:array,
+                                  [:lit, :a],
+                                  [:hash,
+                                    [:lit, :b],
+                                    [:lit, :c]]],
+              "ParseTree"    => s(:array,
+                                  s(:lit, :a),
+                                  s(:hash,
+                                    s(:lit, :b),
+                                    s(:lit, :c))))
+
 end
