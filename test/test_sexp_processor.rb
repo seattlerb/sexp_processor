@@ -24,7 +24,7 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_specific(exp)
-    name = exp.shift
+    _ = exp.shift
     result = s(:blah)
     until exp.empty?
       result.push process(exp.shift)
