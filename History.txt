@@ -1,3 +1,13 @@
+=== 3.0.10 / 2012-01-04
+
+* 1 minor enhancement:
+
+  * Add test for bare hash at end of array in 1.9. (presidentbeef)
+
+* 1 bug fix:
+
+  * Fixed 1.9.3 warnings
+
 === 3.0.9 / 2011-12-07
 
 * 1 minor enhancement:
