@@ -4505,6 +4505,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                       s(:lit, :a), s(:lit, 1),
                                       s(:lit, :b), s(:lit, 2)))))
 
+  add_19tests("call_arglist_trailing_comma",
+            "Ruby"         => "a(1,2,3,)",
+            "ParseTree"    => s(:call, nil, :a,
+                                s(:arglist,
+                                  s(:lit, 1), s(:lit, 2), s(:lit, 3))))
+
   add_19tests("call_not_equal",
             "Ruby"         => "a != b",
               "RawParseTree" => [:call, [:vcall, :a], :"!=",
