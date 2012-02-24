@@ -854,6 +854,26 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "RawParseTree" => [:call, nil, :foo, [:array, [:lit, :bar]]],
             "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))))
 
+  add_tests("ternary_symbol_no_spaces",
+            "Ruby"         => "1?:x:1",
+            "RawParseTree" => [:if, [:lit, 1], [:lit, :x], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1), s(:lit, :x), s(:lit, 1)))
+
+  add_19tests("label_in_callargs_in_ternary",
+            "Ruby"         => "1 ? m(a: 2) : 1",
+            "RawParseTree" => [:if, [:lit, 1], [:call, :nil, :m, [:array, [:hash, [:lit, :a], [:lit, 1]]]], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1), s(:call, nil, :m, s(:arglist, s(:hash, s(:lit, :a), s(:lit, 2)))), s(:lit, 1)))
+
+  add_19tests("label_in_bare_hash_in_array_in_ternary",
+            "Ruby"         => "1 ? [:a, b: 2] : 1",
+            "RawParseTree" => [:if, [:array, [:lit, :a], [:hash, [:lit, :b], [:lit, 2]]], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1), s(:array, s(:lit, :a), s(:hash, s(:lit, :b), s(:lit, 2))), s(:lit, 1)))
+
+  add_tests("ternary_object_no_spaces",
+            "Ruby"         => "1 ?o:1",
+            "RawParseTree" => [:if, [:lit, 1], [:vcall, :o], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)))
+
   add_tests("ternary_nil_no_space",
             "Ruby"         => "1 ? nil: 1",
             "RawParseTree" => [:if, [:lit, 1], [:nil], [:lit, 1]],
@@ -4481,6 +4501,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_19tests("array_bare_hash",
               "Ruby"         => "[:a, :b => :c]",
+              "ParseTree"    => s(:array,
+                                  s(:lit, :a),
+                                  s(:hash,
+                                    s(:lit, :b),
+                                    s(:lit, :c))))
+
+  add_19tests("array_bare_hash_labels",
+              "Ruby"         => "[:a, b: :c]",
               "ParseTree"    => s(:array,
                                   s(:lit, :a),
                                   s(:hash,
