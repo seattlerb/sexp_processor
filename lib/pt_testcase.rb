@@ -2323,6 +2323,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :block_given?, s(:arglist)),
                                 s(:lit, 42), nil))
 
+  add_tests("fcall_inside_parens",
+            "Ruby"         => "( c (d), e)",
+            "ParseTree"    => s(:call,
+                                 nil,
+                                  :c,
+                                   s(:arglist, s(:call, nil, :d, s(:arglist)), s(:call, nil, :e, s(:arglist)))))
+
   add_tests("flip2",
             "Ruby"         => "x = if ((i % 4) == 0)..((i % 3) == 0) then\n  i\nelse\n  nil\nend",
             "RawParseTree" => [:lasgn,
