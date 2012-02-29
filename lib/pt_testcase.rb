@@ -4456,6 +4456,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:defn, :x, s(:args),
                                 s(:scope, s(:block, s(:zsuper)))))
 
+  add_18tests("if_args_no_space_symbol",
+              "Ruby"       => "x if y:z",
+              "ParseTree"  => s(:if,
+                                s(:call, nil, :y, s(:arglist, s(:lit, :z))),
+                                s(:call, nil, :x, s(:arglist)),
+                                nil))
+
   add_18tests("iter_args_ivar",
               "Ruby"         => "a { |@a| 42 }",
               "RawParseTree" => [:iter,
