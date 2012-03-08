@@ -852,12 +852,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("call_no_space_symbol",
             "Ruby"         => "foo:bar",
             "RawParseTree" => [:call, nil, :foo, [:array, [:lit, :bar]]],
-            "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))))
+            "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))),
+            "Ruby2Ruby"    => "foo(:bar)")
 
   add_tests("ternary_symbol_no_spaces",
             "Ruby"         => "1?:x:1",
             "RawParseTree" => [:if, [:lit, 1], [:lit, :x], [:lit, 1]],
-            "ParseTree"    => s(:if, s(:lit, 1), s(:lit, :x), s(:lit, 1)))
+            "ParseTree"    => s(:if, s(:lit, 1), s(:lit, :x), s(:lit, 1)),
+            "Ruby2Ruby"    => "1 ? (:x) : (1)")
 
   add_19tests("label_in_callargs_in_ternary",
             "Ruby"         => "1 ? m(a: 2) : 1",
@@ -872,12 +874,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("ternary_object_no_spaces",
             "Ruby"         => "1 ?o:1",
             "RawParseTree" => [:if, [:lit, 1], [:vcall, :o], [:lit, 1]],
-            "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)))
+            "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)),
+            "Ruby2Ruby"    => "1 ? (o) : (1)")
 
   add_tests("ternary_nil_no_space",
             "Ruby"         => "1 ? nil: 1",
             "RawParseTree" => [:if, [:lit, 1], [:nil], [:lit, 1]],
-            "ParseTree"    => s(:if, s(:lit, 1), s(:nil), s(:lit, 1)))
+            "ParseTree"    => s(:if, s(:lit, 1), s(:nil), s(:lit, 1)),
+            "Ruby2Ruby"    => "1 ? (nil) : (1)")
 
   add_tests("call_arglist_hash",
             "Ruby"         => "o.m(:a => 1, :b => 2)",
@@ -2328,7 +2332,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:call,
                                  nil,
                                   :c,
-                                   s(:arglist, s(:call, nil, :d, s(:arglist)), s(:call, nil, :e, s(:arglist)))))
+                                   s(:arglist, s(:call, nil, :d, s(:arglist)), s(:call, nil, :e, s(:arglist)))),
+            "Ruby2Ruby"    => "c(d, e)")
 
   add_tests("flip2",
             "Ruby"         => "x = if ((i % 4) == 0)..((i % 3) == 0) then\n  i\nelse\n  nil\nend",
@@ -4468,7 +4473,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "ParseTree"  => s(:if,
                                 s(:call, nil, :y, s(:arglist, s(:lit, :z))),
                                 s(:call, nil, :x, s(:arglist)),
-                                nil))
+                                nil),
+            "Ruby2Ruby"    => "x if y(:z)")
 
   add_18tests("iter_args_ivar",
               "Ruby"         => "a { |@a| 42 }",
