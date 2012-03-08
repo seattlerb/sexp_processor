@@ -851,7 +851,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("call_no_space_symbol",
             "Ruby"         => "foo:bar",
-            "RawParseTree" => [:call, nil, :foo, [:array, [:lit, :bar]]],
+            "RawParseTree" => [:fcall, :foo, [:array, [:lit, :bar]]],
             "ParseTree"    => s(:call, nil, :foo, s(:arglist, s(:lit, :bar))),
             "Ruby2Ruby"    => "foo(:bar)")
 
@@ -871,11 +871,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "RawParseTree" => [:if, [:array, [:lit, :a], [:hash, [:lit, :b], [:lit, 2]]], [:lit, 1]],
             "ParseTree"    => s(:if, s(:lit, 1), s(:array, s(:lit, :a), s(:hash, s(:lit, :b), s(:lit, 2))), s(:lit, 1)))
 
-  add_tests("ternary_object_no_spaces",
-            "Ruby"         => "1 ?o:1",
-            "RawParseTree" => [:if, [:lit, 1], [:vcall, :o], [:lit, 1]],
-            "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)),
-            "Ruby2Ruby"    => "1 ? (o) : (1)")
+  # FIX: what version of ruby does this parse under? If none, nuke.
+  # add_tests("ternary_object_no_spaces",
+  #           "Ruby"         => "1 ?o:1",
+  #           "RawParseTree" => [:if, [:lit, 1], [:vcall, :o], [:lit, 1]],
+  #           "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)),
+  #           "Ruby2Ruby"    => "1 ? (o) : (1)")
 
   add_tests("ternary_nil_no_space",
             "Ruby"         => "1 ? nil: 1",
@@ -2329,6 +2330,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("fcall_inside_parens",
             "Ruby"         => "( c (d), e)",
+            "RawParseTree" => [:fcall, :c, [:array, [:vcall, :d], [:vcall, :e]]],
             "ParseTree"    => s(:call,
                                  nil,
                                   :c,
@@ -4474,7 +4476,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :y, s(:arglist, s(:lit, :z))),
                                 s(:call, nil, :x, s(:arglist)),
                                 nil),
-            "Ruby2Ruby"    => "x if y(:z)")
+              "Ruby2Ruby"  => "x if y(:z)")
 
   add_18tests("iter_args_ivar",
               "Ruby"         => "a { |@a| 42 }",
