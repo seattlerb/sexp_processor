@@ -634,17 +634,15 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_19tests("label_in_callargs_in_ternary",
             "Ruby"         => "1 ? m(a: 2) : 1",
-            "ParseTree"    => s(:if, s(:lit, 1), s(:call, nil, :m, s(:arglist, s(:hash, s(:lit, :a), s(:lit, 2)))), s(:lit, 1)))
+              "ParseTree"    => s(:if, s(:lit, 1),
+                                  s(:call, nil, :m,
+                                    s(:arglist,
+                                      s(:hash, s(:lit, :a), s(:lit, 2)))),
+                                  s(:lit, 1)))
 
   add_19tests("label_in_bare_hash_in_array_in_ternary",
             "Ruby"         => "1 ? [:a, b: 2] : 1",
             "ParseTree"    => s(:if, s(:lit, 1), s(:array, s(:lit, :a), s(:hash, s(:lit, :b), s(:lit, 2))), s(:lit, 1)))
-
-  # FIX: what version of ruby does this parse under? If none, nuke.
-  # add_tests("ternary_object_no_spaces",
-  #           "Ruby"         => "1 ?o:1",
-  #           "ParseTree"    => s(:if, s(:lit, 1),  s(:call, nil, :o, s(:arglist)), s(:lit, 1)),
-  #           "Ruby2Ruby"    => "1 ? (o) : (1)")
 
   add_tests("ternary_nil_no_space",
             "Ruby"         => "1 ? nil: 1",
@@ -1546,11 +1544,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:lit, 42), nil))
 
   add_tests("fcall_inside_parens",
-            "Ruby"         => "( c (d), e)",
+            "Ruby"         => "( a (b), c)",
             "ParseTree"    => s(:call,
-                                 nil,
-                                  :c,
-                                   s(:arglist, s(:call, nil, :d, s(:arglist)), s(:call, nil, :e, s(:arglist)))),
+                                nil,
+                                :a,
+                                s(:arglist,
+                                  s(:call, nil, :b, s(:arglist)),
+                                  s(:call, nil, :c, s(:arglist)))),
             "Ruby2Ruby"    => "c(d, e)")
 
   add_tests("flip2",
@@ -3142,108 +3142,151 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:lit, :a), s(:lit, 1),
                                   s(:lit, :b), s(:lit, 2)))
 
-  add_19tests("lambda_args_block",
-              "Ruby"         => "lambda { |&block| block }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:lasgn, :"&block"),
-                                  s(:lvar, :block)))
+  add_tests("lambda_args_anon_star",
+            "Ruby"         => "lambda { |*| nil }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array, s(:splat))),
+                                s(:nil)))
 
-  add_19tests("lambda_args_0",
-              "Ruby"         => "->(){ (x + 1) }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  0,
-                                  s(:call,
-                                    s(:call, nil, :x, s(:arglist)),
-                                    :+,
-                                    s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_anon_star_block",
+            "Ruby"         => "lambda { |*, &block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:splat),
+                                            s(:lasgn, :"&block"))),
+                                s(:lvar, :block)))
 
-  add_19tests("lambda_args_1",
-              "Ruby"         => "-> (x) { (x + 1) }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:lasgn, :x),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_block",
+            "Ruby"         => "lambda { |&block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:lasgn, :"&block"),
+                                s(:lvar, :block)))
 
-  add_19tests("lambda_args_2",
-              "Ruby"         => "-> (x, y) { (x + y) }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:masgn,
-                                    s(:array,
-                                      s(:lasgn, :x),
-                                      s(:lasgn, :y))),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lvar, :y)))))
+  add_tests("lambda_args_norm_anon_star",
+            "Ruby"         => "lambda { |a, *| a }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:lasgn, :a),
+                                            s(:splat))),
+                                s(:lvar, :a)))
 
-  add_19tests("lambda_args_2_no_parens",
-              "Ruby"         => "->  x, y { (x + y) }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:masgn,
-                                    s(:array,
-                                      s(:lasgn, :x),
-                                      s(:lasgn, :y))),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lvar, :y)))))
+  add_tests("lambda_args_norm_anon_star_block",
+            "Ruby"         => "lambda { |a, *, &block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:lasgn, :a),
+                                            s(:splat),
+                                            s(:lasgn, :"&block"))),
+                                s(:lvar, :block)))
 
-  add_19tests("lambda_args_no",
-              "Ruby"         => "-> { (x + 1) }",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  nil,
-                                  s(:call, s(:call, nil, :x, s(:arglist)),
-                                    :+, s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_norm_block",
+            "Ruby"         => "lambda { |a, &block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:lasgn, :a),
+                                            s(:lasgn, :"&block"))),
+                                s(:lvar, :block)))
 
-  add_19tests("lambda_args_no_do",
-              "Ruby"         => "-> do (x + 1) end",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  nil,
-                                  s(:call, s(:call, nil, :x, s(:arglist)),
-                                    :+, s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_norm_comma",
+            "Ruby"         => "lambda { |a,| a }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:lasgn, :a),
+                                s(:lvar, :a)))
 
-  add_19tests("lambda_args_0_do",
-              "Ruby"         => "->() do (x + 1) end",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  0,
-                                  s(:call,
-                                    s(:call, nil, :x, s(:arglist)),
-                                    :+,
-                                    s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_norm_comma2",
+            "Ruby"         => "lambda { |a,b,| a }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn,
+                                  s(:array, s(:lasgn, :a), s(:lasgn, :b))),
+                                s(:lvar, :a)))
 
-  add_19tests("lambda_args_1_do",
-              "Ruby"         => "-> (x) do (x + 1) end",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:lasgn, :x),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lit, 1)))))
+  add_tests("lambda_args_norm_star",
+            "Ruby"         => "lambda { |a, *star| star }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:lasgn, :a),
+                                            s(:splat, s(:lasgn, :star)))),
+                                s(:lvar, :star)))
 
-  add_19tests("lambda_args_2_do",
-              "Ruby"         => "-> (x, y) do (x + y) end",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:masgn,
-                                    s(:array,
-                                      s(:lasgn, :x),
-                                      s(:lasgn, :y))),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lvar, :y)))))
+  add_tests("lambda_args_norm_star_block",
+            "Ruby"         => "lambda { |a, *star, &block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:lasgn, :a),
+                                            s(:splat, s(:lasgn, :star)),
+                                            s(:lasgn, :"&block"))),
+                                s(:lvar, :block)))
 
-  add_19tests("lambda_args_2_no_parens_do",
-              "Ruby"         => "->  x, y do (x + y) end",
-              "ParseTree"    => s(:iter,
-                                  s(:call, nil, :lambda, s(:arglist)),
-                                  s(:masgn,
-                                    s(:array,
-                                      s(:lasgn, :x),
-                                      s(:lasgn, :y))),
-                                  s(:call, s(:lvar, :x), :+,
-                                    s(:arglist, s(:lvar, :y)))))
+  add_tests("lambda_args_star",
+            "Ruby"         => "lambda { |*star| star }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:splat, s(:lasgn, :star)))),
+                                s(:lvar, :star)))
+
+  add_tests("lambda_args_star_block",
+            "Ruby"         => "lambda { |*star, &block| block }",
+            "ParseTree"    => s(:iter,
+                                s(:call, nil, :lambda, s(:arglist)),
+                                s(:masgn, s(:array,
+                                            s(:splat, s(:lasgn, :star)),
+                                            s(:lasgn, :"&block"))),
+                                s(:lvar, :block)))
+
+  # REFACTOR: we've got 4 sets of edge cases w/ the same output
+
+  def self.add19_edgecases ruby, sexp, cases
+    cases.each do |name, code|
+      add_19tests name, "Ruby" => code, "ParseTree" => sexp, "Ruby2Ruby" => ruby
+    end
+  end
+
+  add19_edgecases("lambda { (x + 1) }",
+                  s(:iter,
+                    s(:call, nil, :lambda, s(:arglist)),
+                    0,
+                    s(:call, s(:call, nil, :x, s(:arglist)),
+                      :+, s(:arglist, s(:lit, 1)))),
+                  "stabby_args_0"                 => "->() { (x + 1) }",
+                  "stabby_args_0_doend"           => "->() do (x + 1) end",
+                  "stabby_args_0_no_parens"       => "-> { (x + 1) }",
+                  "stabby_args_0_no_parens_doend" => "-> do (x + 1) end",
+                  "stabby_args_0_spacebar_broken" => "->{x+1}") # I hate you
+
+  add19_edgecases("lambda { |x| (x + 1) }",
+                  s(:iter,
+                    s(:call, nil, :lambda, s(:arglist)),
+                    s(:lasgn, :x),
+                    s(:call, s(:lvar, :x), :+, s(:arglist, s(:lit, 1)))),
+                  "stabby_args_1"                 => "->(x) { (x + 1) }",
+                  "stabby_args_1_doend"           => "->(x) do (x + 1) end",
+                  "stabby_args_1_no_parens"       => "-> x { (x + 1) }",
+                  "stabby_args_1_no_parens_doend" => "-> x do (x + 1) end")
+
+  add19_edgecases("lambda { |x, y| (x + y) }",
+                  s(:iter,
+                    s(:call, nil, :lambda, s(:arglist)),
+                    s(:masgn,
+                      s(:array,
+                        s(:lasgn, :x),
+                        s(:lasgn, :y))),
+                    s(:call, s(:lvar, :x), :+,
+                      s(:arglist, s(:lvar, :y)))),
+                  "stabby_args_2"                 => "->(x, y) { (x + y) }",
+                  "stabby_args_2_doend"           => "->(x, y) do (x + y) end",
+                  "stabby_args_2_no_parens"       => "-> x, y { (x + y) }",
+                  "stabby_args_2_no_parens_doend" => "-> x, y do (x + y) end")
 
   add_19tests("hash_new_with_keyword",
               "Ruby"         => "{ true: 1, b: 2 }",
