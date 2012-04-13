@@ -545,6 +545,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   # oddly... this one doesn't HAVE any differences when verbose... new?
   copy_test_case "block_stmt_before", "Ruby"
   copy_test_case "block_stmt_before", "ParseTree"
+  copy_test_case "block_stmt_before", "Ruby2Ruby"
 
   add_tests("block_stmt_both",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\n  d\nend",
@@ -1551,7 +1552,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:arglist,
                                   s(:call, nil, :b, s(:arglist)),
                                   s(:call, nil, :c, s(:arglist)))),
-            "Ruby2Ruby"    => "c(d, e)")
+            "Ruby2Ruby"    => "a(b, c)")
 
   add_tests("flip2",
             "Ruby"         => "x = if ((i % 4) == 0)..((i % 3) == 0) then\n  i\nelse\n  nil\nend",
@@ -3198,7 +3199,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :lambda, s(:arglist)),
                                 s(:lasgn, :a),
-                                s(:lvar, :a)))
+                                s(:lvar, :a)),
+            "Ruby2Ruby"    => "lambda { |a| a }")
 
   add_tests("lambda_args_norm_comma2",
             "Ruby"         => "lambda { |a,b,| a }",
@@ -3206,7 +3208,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :lambda, s(:arglist)),
                                 s(:masgn,
                                   s(:array, s(:lasgn, :a), s(:lasgn, :b))),
-                                s(:lvar, :a)))
+                                s(:lvar, :a)),
+            "Ruby2Ruby"    => "lambda { |a, b| a }")
 
   add_tests("lambda_args_norm_star",
             "Ruby"         => "lambda { |a, *star| star }",
