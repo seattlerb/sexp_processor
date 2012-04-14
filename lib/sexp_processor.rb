@@ -139,6 +139,11 @@ class SexpProcessor
   def rewrite(exp)
     type = exp.first
 
+    if @debug.has_key? type then
+      str = exp.inspect
+      puts "// DEBUG (original ): #{str}" if str =~ @debug[type]
+    end
+
     in_context type do
       exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
     end
@@ -147,6 +152,12 @@ class SexpProcessor
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth
       break unless Sexp === exp
+
+      if @debug.has_key? type then
+        str = exp.inspect
+        puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
+      end
+
       old_type, type = type, exp.first
     end until old_type == type
 
@@ -160,7 +171,11 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
-    exp = self.rewrite(exp) if self.context.empty?
+    if self.context.empty? then
+      p :rewriting unless debug.empty?
+      exp = self.rewrite(exp)
+      p :done_rewriting unless debug.empty?
+    end
 
     unless @unsupported_checked then
       m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').to_sym }
@@ -180,7 +195,7 @@ class SexpProcessor
     in_context type do
       if @debug.has_key? type then
         str = exp.inspect
-        puts "// DEBUG: #{str}" if str =~ @debug[type]
+        puts "// DEBUG:(original ): #{str}" if str =~ @debug[type]
       end
 
       exp_orig = nil
@@ -189,11 +204,6 @@ class SexpProcessor
 
       raise UnsupportedNodeError, "'#{type}' is not a supported node type" if
         @unsupported.include? type
-
-      if @debug.has_key? type then
-        str = exp.inspect
-        puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
-      end
 
       # now do a pass with the real processor (or generic)
       meth = @processors[type] || @default_method
@@ -207,6 +217,11 @@ class SexpProcessor
 
         result = error_handler(type, exp_orig) do
           self.send(meth, exp)
+        end
+
+        if @debug.has_key? type then
+          str = exp.inspect
+          puts "// DEBUG (processed): #{str}" if str =~ @debug[type]
         end
 
         raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
