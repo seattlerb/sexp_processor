@@ -1,3 +1,18 @@
+=== 3.2.0 / 2012-04-15
+
+* 5 minor enhancements:
+
+  * Added a ton of block arg tests.
+  * Added add19_edgecases to help refactor a bunch of tests that all have the same output.
+  * Added better debugging output for rewrites.
+  * Cleaned and added a bunch of stabby proc tests.
+  * Moved RawParseTree test data to ParseTree project.
+
+* 2 bug fixes:
+
+  * Fixed a bunch of entries for r2r changes against edgecase parse/lex tests
+  * Fixes for R2R
+
 === 3.1.0 / 2012-02-29
 
 * 4 minor enhancements:
