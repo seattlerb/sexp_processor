@@ -1,8 +1,7 @@
 = SexpProcessor
 
 home :: https://github.com/seattlerb/sexp_processor
-rdoc :: http://parsetree.rubyforge.org/sexp_processor
-* http://rubyforge.org/projects/parsetree/
+rdoc :: http://docs.seattlerb.org/sexp_processor
 
 == DESCRIPTION:
 
