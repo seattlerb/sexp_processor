@@ -219,12 +219,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("alias",
             "Ruby"         => "class X\n  alias :y :x\nend",
             "ParseTree"    => s(:class, :X, nil,
-                                s(:scope, s(:alias, s(:lit, :y), s(:lit, :x)))))
+                                s(:alias, s(:lit, :y), s(:lit, :x))))
 
   add_tests("alias_ugh",
             "Ruby"         => "class X\n  alias y x\nend",
             "ParseTree"    => s(:class, :X, nil,
-                                s(:scope, s(:alias, s(:lit, :y), s(:lit, :x)))),
+                                s(:alias, s(:lit, :y), s(:lit, :x))),
             "Ruby2Ruby"    => "class X\n  alias :y :x\nend")
 
   add_tests("and",
@@ -335,8 +335,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("begin_def",
             "Ruby"         => "def m\n  begin\n\n  end\nend",
-            "ParseTree"    => s(:defn, :m, s(:args),
-                                s(:scope, s(:block, s(:nil)))),
+            "ParseTree"    => s(:defn, :m, s(:args), s(:nil)),
             "Ruby2Ruby"    => "def m\n  # do nothing\nend")
 
   add_tests("begin_rescue_ensure",
@@ -376,13 +375,10 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby" => "def self.setup(ctx)\n  bind = allocate\n  bind.context = ctx\n  return bind\nend",
             "ParseTree" => s(:defs, s(:self), :setup,
                              s(:args, :ctx),
-                             s(:scope,
-                               s(:block,
-                                 s(:lasgn, :bind,
-                                   s(:call, nil, :allocate)),
-                                 s(:attrasgn, s(:lvar, :bind), :context=,
-                                   s(:lvar, :ctx)),
-                                 s(:return, s(:lvar, :bind))))))
+                             s(:lasgn, :bind, s(:call, nil, :allocate)),
+                             s(:attrasgn,
+                               s(:lvar, :bind), :context=, s(:lvar, :ctx)),
+                             s(:return, s(:lvar, :bind))))
 
 
   add_tests("block_lasgn",
@@ -410,14 +406,11 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("block_pass_args_and_splat",
             "Ruby"         => "def blah(*args, &block)\n  other(42, *args, &block)\nend",
-            "ParseTree"    => s(:defn, :blah,
-                                s(:args, :"*args", :"&block"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :other,
-                                      s(:lit, 42),
-                                      s(:splat, s(:lvar, :args)),
-                                      s(:block_pass, s(:lvar, :block)))))))
+            "ParseTree"    => s(:defn, :blah, s(:args, :"*args", :"&block"),
+                                s(:call, nil, :other,
+                                  s(:lit, 42),
+                                  s(:splat, s(:lvar, :args)),
+                                  s(:block_pass, s(:lvar, :block)))))
 
   add_tests("block_pass_call_0",
             "Ruby"         => "a.b(&c)",
@@ -475,11 +468,9 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => "def blah(*args, &block)\n  other(*args, &block)\nend",
             "ParseTree"    => s(:defn, :blah,
                                 s(:args, :"*args", :"&block"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :other,
-                                      s(:splat, s(:lvar, :args)),
-                                      s(:block_pass, s(:lvar, :block)))))))
+                                s(:call, nil, :other,
+                                  s(:splat, s(:lvar, :args)),
+                                  s(:block_pass, s(:lvar, :block)))))
 
   add_tests("block_pass_thingy",
             "Ruby"         => "r.read_body(dest, &block)",
@@ -491,16 +482,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("block_stmt_after",
             "Ruby"         => "def f\n  begin\n    b\n  rescue\n    c\n  end\n\n  d\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:rescue,
-                                      s(:call, nil, :b),
-                                      s(:resbody,
-                                        s(:array),
-                                        s(:call, nil, :c))),
-                                    s(:call, nil, :d)))),
+            "ParseTree"    => s(:defn, :f, s(:args),
+                                s(:rescue,
+                                  s(:call, nil, :b),
+                                  s(:resbody,
+                                    s(:array),
+                                    s(:call, nil, :c))),
+                                s(:call, nil, :d)),
             "Ruby2Ruby"    => "def f\n  b rescue c\n  d\nend")
 
   copy_test_case "block_stmt_after", "Ruby"
@@ -509,15 +497,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("block_stmt_before",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :a),
-                                    s(:rescue, s(:call, nil, :b),
-                                      s(:resbody,
-                                        s(:array),
-                                        s(:call, nil, :c)))))),
+            "ParseTree"    => s(:defn, :f, s(:args),
+                                s(:call, nil, :a),
+                                s(:rescue, s(:call, nil, :b),
+                                  s(:resbody,
+                                    s(:array),
+                                    s(:call, nil, :c)))),
             "Ruby2Ruby"    => "def f\n  a\n  b rescue c\nend")
 
   # oddly... this one doesn't HAVE any differences when verbose... new?
@@ -528,15 +513,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("block_stmt_both",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\n  d\nend",
             "ParseTree"    => s(:defn, :f, s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :a),
-                                    s(:rescue,
-                                      s(:call, nil, :b),
-                                      s(:resbody,
-                                        s(:array),
-                                        s(:call, nil, :c))),
-                                    s(:call, nil, :d)))),
+                                s(:call, nil, :a),
+                                s(:rescue,
+                                  s(:call, nil, :b),
+                                  s(:resbody,
+                                    s(:array),
+                                    s(:call, nil, :c))),
+                                s(:call, nil, :d)),
             "Ruby2Ruby"    => "def f\n  a\n  b rescue c\n  d\nend")
 
   copy_test_case "block_stmt_both", "Ruby"
@@ -545,34 +528,25 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("bmethod",
             "Ruby"         => [Examples, :unsplatted],
-            "ParseTree"    => s(:defn, :unsplatted,
-                                s(:args, :x),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, s(:lvar, :x), :+, s(:lit, 1))))),
+            "ParseTree"    => s(:defn, :unsplatted, s(:args, :x),
+                                s(:call, s(:lvar, :x), :+, s(:lit, 1))),
             "Ruby2Ruby"    => "def unsplatted(x)\n  (x + 1)\nend")
 
   add_tests("bmethod_noargs",
             "Ruby"         => [Examples, :bmethod_noargs],
-            "ParseTree"    => s(:defn, :bmethod_noargs,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call,
-                                      s(:call, nil, :x),
-                                      :"+",
-                                      s(:lit, 1))))),
+            "ParseTree"    => s(:defn, :bmethod_noargs, s(:args),
+                                s(:call,
+                                  s(:call, nil, :x),
+                                  :"+",
+                                  s(:lit, 1))),
             "Ruby2Ruby"    => "def bmethod_noargs\n  (x + 1)\nend")
 
   add_tests("bmethod_splat",
             "Ruby"         => [Examples, :splatted],
-            "ParseTree"    => s(:defn, :splatted,
-                                s(:args, :"*args"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:lasgn, :y,
-                                      s(:call, s(:lvar, :args), :first)),
-                                    s(:call, s(:lvar, :y), :+, s(:lit, 42))))),
+            "ParseTree"    => s(:defn, :splatted, s(:args, :"*args"),
+                                s(:lasgn, :y,
+                                  s(:call, s(:lvar, :args), :first)),
+                                s(:call, s(:lvar, :y), :+, s(:lit, 42))),
             "Ruby2Ruby"    => "def splatted(*args)\n  y = args.first\n  (y + 42)\nend")
 
   add_tests("break",
@@ -803,50 +777,33 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("class_plain",
             "Ruby"         => "class X\n  puts((1 + 1))\n  def blah\n    puts(\"hello\")\n  end\nend",
-            "ParseTree"    => s(:class,
-                                :X,
-                                nil,
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :puts,
-                                      s(:call, s(:lit, 1), :+, s(:lit, 1))),
-                                    s(:defn, :blah,
-                                      s(:args),
-                                      s(:scope,
-                                        s(:block,
-                                          s(:call, nil, :puts,
-                                            s(:str, "hello")))))))))
+            "ParseTree"    => s(:class, :X, nil,
+                                s(:call, nil, :puts,
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1))),
+                                s(:defn, :blah, s(:args),
+                                  s(:call, nil, :puts, s(:str, "hello")))))
 
   add_tests("class_scoped",
             "Ruby"         => "class X::Y\n  c\nend",
             "ParseTree"    => s(:class, s(:colon2, s(:const, :X), :Y), nil,
-                                s(:scope, s(:call, nil, :c))))
+                                s(:call, nil, :c)))
 
   add_tests("class_scoped3",
             "Ruby"         => "class ::Y\n  c\nend",
             "ParseTree"    => s(:class, s(:colon3, :Y), nil,
-                                s(:scope, s(:call, nil, :c))))
+                                s(:call, nil, :c)))
 
   add_tests("class_super_array",
             "Ruby"         => "class X < Array\nend",
-            "ParseTree"    => s(:class,
-                                :X,
-                                s(:const, :Array),
-                                s(:scope)))
+            "ParseTree"    => s(:class, :X, s(:const, :Array)))
 
   add_tests("class_super_expr",
             "Ruby"         => "class X < expr\nend",
-            "ParseTree"    => s(:class,
-                                :X,
-                                s(:call, nil, :expr),
-                                s(:scope)))
+            "ParseTree"    => s(:class, :X, s(:call, nil, :expr)))
 
   add_tests("class_super_object",
             "Ruby"         => "class X < Object\nend",
-            "ParseTree"    => s(:class,
-                                :X,
-                                s(:const, :Object),
-                                s(:scope)))
+            "ParseTree"    => s(:class, :X, s(:const, :Object)))
 
   add_tests("colon2",
             "Ruby"         => "X::Y",
@@ -880,25 +837,20 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("cvasgn",
             "Ruby"         => "def x\n  @@blah = 1\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:cvasgn, :@@blah, s(:lit, 1))))))
+            "ParseTree"    => s(:defn, :x, s(:args),
+                                s(:cvasgn, :@@blah, s(:lit, 1))))
 
   add_tests("cvasgn_cls_method",
             "Ruby"         => "def self.quiet_mode=(boolean)\n  @@quiet_mode = boolean\nend",
             "ParseTree"    => s(:defs, s(:self), :quiet_mode=,
                                 s(:args, :boolean),
-                                s(:scope,
-                                  s(:block,
-                                    s(:cvasgn, :@@quiet_mode,
-                                      s(:lvar, :boolean))))))
+                                s(:cvasgn, :@@quiet_mode,
+                                  s(:lvar, :boolean))))
 
   add_tests("cvdecl",
             "Ruby"         => "class X\n  @@blah = 1\nend",
             "ParseTree"    => s(:class, :X, nil,
-                                s(:scope, s(:cvdecl, :@@blah, s(:lit, 1)))))
+                                s(:cvdecl, :@@blah, s(:lit, 1))))
 
   add_tests("dasgn_0",
             "Ruby"         => "a.each { |x| b.each { |y| x = (x + 1) } if true }",
@@ -990,21 +942,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   # TODO: make all the defn_args* p their arglist
   add_tests("defn_args_block",
             "Ruby"         => "def f(&block)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args, :"&block"),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :f, s(:args, :"&block"),
+                                s(:nil)))
 
   add_tests("defn_args_mand",
             "Ruby"         => "def f(mand)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args, :mand),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :f, s(:args, :mand),
+                                s(:nil)))
 
   add_tests("defn_args_mand_block",
             "Ruby"         => "def f(mand, &block)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args, :mand, :"&block"),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :f, s(:args, :mand, :"&block"),
+                                 s(:nil)))
 
   add_tests("defn_args_mand_opt",
             "Ruby"         => "def f(mand, opt = 42)\n  # do nothing\nend",
@@ -1012,7 +961,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :mand, :opt,
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_opt_block",
             "Ruby"         => "def f(mand, opt = 42, &block)\n  # do nothing\nend",
@@ -1020,7 +969,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :mand, :opt, :"&block",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_opt_splat",
             "Ruby"         => "def f(mand, opt = 42, *rest)\n  # do nothing\nend",
@@ -1028,7 +977,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :mand, :opt, :"*rest",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_opt_splat_block",
             "Ruby"         => "def f(mand, opt = 42, *rest, &block)\n  # do nothing\nend",
@@ -1036,43 +985,37 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :mand, :opt, :"*rest", :"&block",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_opt_splat_no_name",
             "Ruby"         => "def x(a, b = 42, *)\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :x,
                                 s(:args, :a, :b, :"*",
                                   s(:block, s(:lasgn, :b, s(:lit, 42)))),
-                                s(:scope,
-                                  s(:block,
-                                    s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_splat",
             "Ruby"         => "def f(mand, *rest)\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :f,
                                 s(:args, :mand, :"*rest"),
-                                s(:scope, s(:block, s(:nil)))))
-
+                                s(:nil)))
+  
   add_tests("defn_args_mand_splat_block",
             "Ruby"         => "def f(mand, *rest, &block)\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :f,
                                 s(:args, :mand, :"*rest", :"&block"),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_mand_splat_no_name",
             "Ruby"         => "def x(a, *args)\n  p(a, args)\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args, :a, :"*args"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :p,
-                                      s(:lvar, :a), s(:lvar, :args))))))
+            "ParseTree"    => s(:defn, :x, s(:args, :a, :"*args"),
+                                s(:call, nil, :p,
+                                  s(:lvar, :a), s(:lvar, :args))))
 
   add_tests("defn_args_none",
             "Ruby"         => "def empty\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :empty,
-                                s(:args),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :empty, s(:args),
+                                s(:nil)))
 
   add_tests("defn_args_opt",
             "Ruby"         => "def f(opt = 42)\n  # do nothing\nend",
@@ -1080,7 +1023,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :opt,
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_opt_block",
             "Ruby"         => "def f(opt = 42, &block)\n  # do nothing\nend",
@@ -1088,7 +1031,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :opt, :"&block",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                 s(:nil)))
 
   add_tests("defn_args_opt_splat",
             "Ruby"         => "def f(opt = 42, *rest)\n  # do nothing\nend",
@@ -1096,7 +1039,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :opt, :"*rest",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_opt_splat_block",
             "Ruby"         => "def f(opt = 42, *rest, &block)\n  # do nothing\nend",
@@ -1104,125 +1047,100 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:args, :opt, :"*rest", :"&block",
                                   s(:block,
                                     s(:lasgn, :opt, s(:lit, 42)))),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_opt_splat_no_name",
             "Ruby"         => "def x(b = 42, *)\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :x,
                                 s(:args, :b, :"*",
                                   s(:block, s(:lasgn, :b, s(:lit, 42)))),
-                                s(:scope,
-                                  s(:block,
-                                    s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_args_splat",
             "Ruby"         => "def f(*rest)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :f,
-                                s(:args, :"*rest"),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :f, s(:args, :"*rest"),
+                                s(:nil)))
 
   add_tests("defn_args_splat_no_name",
             "Ruby"         => "def x(*)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args, :"*"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:nil)))))
+            "ParseTree"    => s(:defn, :x, s(:args, :"*"),
+                                s(:nil)))
 
   add_tests("defn_or",
             "Ruby"         => "def |(o)\n  # do nothing\nend",
-            "ParseTree"    => s(:defn, :|,
-                                s(:args, :o),
-                                s(:scope, s(:block, s(:nil)))))
+            "ParseTree"    => s(:defn, :|, s(:args, :o),
+                                s(:nil)))
 
   add_tests("defn_rescue",
             "Ruby"         => "def eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
             "ParseTree"    => s(:defn, :eql?,
                                 s(:args, :resource),
-                                s(:scope,
-                                  s(:block,
-                                    s(:rescue,
-                                      s(:call,
-                                        s(:call, s(:self), :uuid),
-                                        :==,
-                                        s(:call, s(:lvar, :resource), :uuid)),
-                                      s(:resbody, s(:array), s(:false)))))),
+                                s(:rescue,
+                                  s(:call,
+                                    s(:call, s(:self), :uuid),
+                                    :==,
+                                    s(:call, s(:lvar, :resource), :uuid)),
+                                  s(:resbody, s(:array), s(:false)))),
             "Ruby2Ruby"    => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend")
 
   add_tests("defn_rescue_mri_verbose_flag",
             "Ruby"         => "def eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
             "ParseTree"    => s(:defn, :eql?,
                                 s(:args, :resource),
-                                s(:scope,
-                                  s(:block,
-                                    s(:rescue,
-                                      s(:call,
-                                        s(:call, s(:self), :uuid),
-                                        :==,
-                                        s(:call, s(:lvar, :resource), :uuid)),
-                                      s(:resbody, s(:array), s(:false)))))),
+                                s(:rescue,
+                                  s(:call,
+                                    s(:call, s(:self), :uuid),
+                                    :==,
+                                    s(:call, s(:lvar, :resource), :uuid)),
+                                  s(:resbody, s(:array), s(:false)))),
             "Ruby2Ruby"    => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend")
 
   add_tests("defn_something_eh",
             "Ruby"         => "def something?\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :something?,
                                 s(:args),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_tests("defn_splat_no_name",
             "Ruby"         => "def x(a, *)\n  p(a)\nend",
             "ParseTree"    => s(:defn, :x,
                                 s(:args, :a, :"*"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, nil, :p, s(:lvar, :a))))))
+                                s(:call, nil, :p, s(:lvar, :a))))
 
   add_tests("defn_zarray",
             "Ruby"         => "def zarray\n  a = []\n  return a\nend",
             "ParseTree"    => s(:defn, :zarray,
                                 s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:lasgn, :a, s(:array)),
-                                    s(:return, s(:lvar, :a))))))
+                                s(:lasgn, :a, s(:array)),
+                                s(:return, s(:lvar, :a))))
 
   add_tests("defs",
             "Ruby"         => "def self.x(y)\n  (y + 1)\nend",
             "ParseTree"    => s(:defs, s(:self), :x,
                                 s(:args, :y),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, s(:lvar, :y), :+, s(:lit, 1))))))
+                                s(:call, s(:lvar, :y), :+, s(:lit, 1))))
 
   add_tests("defs_empty",
             "Ruby"         => "def self.empty\n  # do nothing\nend",
-            "ParseTree"    => s(:defs, s(:self), :empty,
-                                s(:args),
-                                s(:scope, s(:block))))
+            "ParseTree"    => s(:defs, s(:self), :empty, s(:args)))
 
   add_tests("defs_empty_args",
             "Ruby"         => "def self.empty(*)\n  # do nothing\nend",
             "ParseTree"    => s(:defs, s(:self), :empty,
-                                s(:args, :*),
-                                s(:scope, s(:block))))
+                                s(:args, :*)))
 
   add_tests("defs_expr_wtf",
             "Ruby"         => "def (a.b).empty(*)\n  # do nothing\nend",
             "ParseTree"    => s(:defs,
-                                s(:call,
-                                  s(:call, nil, :a),
-                                  :b),
+                                s(:call, s(:call, nil, :a), :b),
                                 :empty,
-                                s(:args, :*),
-                                s(:scope, s(:block))))
+                                s(:args, :*)))
 
   add_tests("dmethod",
             "Ruby"         => [Examples, :dmethod_added],
             "ParseTree"    => s(:defn, :dmethod_added,
                                 s(:args, :x),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, s(:lvar, :x), :+, s(:lit, 1))))),
+                                s(:call, s(:lvar, :x), :+, s(:lit, 1))),
             "Ruby2Ruby"    => "def dmethod_added(x)\n  (x + 1)\nend")
 
   add_tests("dot2",
@@ -1419,11 +1337,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("fbody",
             "Ruby"         => [Examples, :an_alias],
-            "ParseTree"    => s(:defn, :an_alias,
-                                s(:args, :x),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, s(:lvar, :x), :+, s(:lit, 1))))),
+            "ParseTree"    => s(:defn, :an_alias, s(:args, :x),
+                                s(:call, s(:lvar, :x), :+, s(:lit, 1))),
             "Ruby2Ruby"    => "def an_alias(x)\n  (x + 1)\nend")
 
   add_tests("fcall_arglist",
@@ -1861,21 +1776,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => "b = 42\ndef a\n  c do\n    begin\n      do_stuff\n    rescue RuntimeError => b\n      puts(b)\n    end\n  end\nend\n",
             "ParseTree"    => s(:block,
                                 s(:lasgn, :b, s(:lit, 42)),
-                                s(:defn, :a,
-                                  s(:args),
-                                  s(:scope,
-                                    s(:block,
-                                      s(:iter,
-                                        s(:call, nil, :c),
-                                        nil,
-                                        s(:rescue,
-                                          s(:call, nil, :do_stuff),
-                                          s(:resbody,
-                                            s(:array,
-                                              s(:const, :RuntimeError),
-                                              s(:lasgn, :b, s(:gvar, :$!))),
-                                            s(:call, nil, :puts,
-                                              s(:lvar, :b))))))))))
+                                s(:defn, :a, s(:args),
+                                  s(:iter,
+                                    s(:call, nil, :c),
+                                    nil,
+                                    s(:rescue,
+                                      s(:call, nil, :do_stuff),
+                                      s(:resbody,
+                                        s(:array,
+                                          s(:const, :RuntimeError),
+                                          s(:lasgn, :b, s(:gvar, :$!))),
+                                        s(:call, nil, :puts,
+                                          s(:lvar, :b))))))))
 
   add_tests("masgn",
             "Ruby"         => "a, b = c, d",
@@ -2059,21 +1971,17 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("module",
             "Ruby"         => "module X\n  def y\n    # do nothing\n  end\nend",
             "ParseTree"    => s(:module, :X,
-                                s(:scope,
-                                  s(:defn, :y,
-                                    s(:args),
-                                    s(:scope, s(:block, s(:nil)))))))
+                                s(:defn, :y, s(:args), s(:nil))))
 
   add_tests("module_scoped",
             "Ruby"         => "module X::Y\n  c\nend",
             "ParseTree"    => s(:module, s(:colon2, s(:const, :X), :Y),
-                                s(:scope, s(:call, nil, :c))))
+                                s(:call, nil, :c)))
 
   add_tests("module_scoped3",
             "Ruby"         => "module ::Y\n  c\nend",
-            "ParseTree"    => s(:module,
-                                s(:colon3, :Y),
-                                s(:scope, s(:call, nil, :c))))
+            "ParseTree"    => s(:module, s(:colon3, :Y),
+                                s(:call, nil, :c)))
 
   add_tests("next",
             "Ruby"         => "loop { next if false }",
@@ -2236,9 +2144,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:block,
                                     s(:lasgn, :a, s(:lit, 0.0)),
                                     s(:lasgn, :b, s(:lit, 0.0)))),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call, s(:lvar, :a), :+, s(:lvar, :b))))),
+                                s(:call, s(:lvar, :a), :+, s(:lvar, :b))),
             "Ruby2Ruby"    => "def x(a = 0.0, b = 0.0)\n  (a + b)\nend")
 
   add_tests("postexe",
@@ -2396,28 +2302,20 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("sclass",
             "Ruby"         => "class << self\n  42\nend",
-            "ParseTree"    => s(:sclass, s(:self), s(:scope, s(:lit, 42))))
+            "ParseTree"    => s(:sclass, s(:self), s(:lit, 42)))
 
   add_tests("sclass_trailing_class",
             "Ruby"         => "class A\n  class << self\n    a\n  end\n  class B\n  end\nend",
             "ParseTree"    => s(:class, :A, nil,
-                                s(:scope,
-                                  s(:block,
-                                    s(:sclass, s(:self),
-                                      s(:scope,
-                                        s(:call, nil, :a))),
-                                    s(:class, :B, nil, s(:scope))))))
+                                s(:sclass, s(:self),
+                                  s(:call, nil, :a)),
+                                s(:class, :B, nil)))
 
   add_tests("splat",
             "Ruby"         => "def x(*b)\n  a(*b)\nend",
             "ParseTree"    => s(:defn, :x,
                                 s(:args, :"*b"),
-                                s(:scope,
-                                  s(:block,
-                                    s(:call,
-                                      nil,
-                                      :a,
-                                      s(:splat, s(:lvar, :b)))))))
+                                s(:call, nil, :a, s(:splat, s(:lvar, :b)))))
 
   add_tests("splat_array",
             "Ruby"         => "[*[1]]",
@@ -2593,33 +2491,23 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("structure_unused_literal_wwtt",
             "Ruby"         => "\"prevent the above from infecting rdoc\"\n\nmodule Graffle\nend",
-            "ParseTree"    => s(:module, :Graffle, s(:scope)),
+            "ParseTree"    => s(:module, :Graffle),
             "Ruby2Ruby"    => "module Graffle\nend")
 
   add_tests("super_0",
             "Ruby"         => "def x\n  super()\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope, s(:block, s(:super)))))
+            "ParseTree"    => s(:defn, :x, s(:args), s(:super)))
 
   add_tests("super_1",
             "Ruby"         => "def x\n  super(4)\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:super, s(:lit, 4))))))
+            "ParseTree"    => s(:defn, :x, s(:args),
+                                s(:super, s(:lit, 4))))
 
   add_tests("super_1_array",
             "Ruby"         => "def x\n  super([24, 42])\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:super, s(:array,
-                                                s(:lit, 24),
-                                                s(:lit, 42)))))))
-
+            "ParseTree"    => s(:defn, :x, s(:args),
+                                s(:super, s(:array, s(:lit, 24), s(:lit, 42)))))
+  
   add_tests("super_block_pass",
             "Ruby"         => "super(a, &b)",
             "ParseTree"    => s(:super,
@@ -2635,11 +2523,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("super_n",
             "Ruby"         => "def x\n  super(24, 42)\nend",
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:super, s(:lit, 24), s(:lit, 42))))))
+            "ParseTree"    => s(:defn, :x, s(:args),
+                                s(:super, s(:lit, 24), s(:lit, 42))))
 
   add_tests("svalue",
             "Ruby"         => "a = *b",
@@ -2867,8 +2752,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("zsuper",
             "Ruby"         => "def x\n  super\nend",
-            "ParseTree"    => s(:defn, :x, s(:args),
-                                s(:scope, s(:block, s(:zsuper)))))
+            "ParseTree"    => s(:defn, :x, s(:args), s(:zsuper)))
 
   add_18tests("if_args_no_space_symbol",
               "Ruby"       => "x if y:z",
@@ -2958,7 +2842,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "Ruby"         => "def f(*rest, mand)\n  # do nothing\nend",
               "ParseTree"    => s(:defn, :f,
                                   s(:args, :"*rest", :mand),
-                                  s(:scope, s(:block, s(:nil)))))
+                                  s(:nil)))
 
   add_19tests("defn_args_mand_opt_splat_mand",
               "Ruby"      => "def f(mand1, opt = 42, *rest, mand2)\n  # do nothing\nend",
@@ -2966,7 +2850,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                s(:args, :mand1, :opt, :"*rest", :mand2,
                                  s(:block,
                                    s(:lasgn, :opt, s(:lit, 42)))),
-                               s(:scope, s(:block, s(:nil)))))
+                               s(:nil)))
 
   add_19tests("defn_args_mand_opt_mand",
               "Ruby"      => "def f(mand1, opt = 42, mand2)\n  # do nothing\nend",
@@ -2974,7 +2858,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                s(:args, :mand1, :opt, :mand2,
                                  s(:block,
                                    s(:lasgn, :opt, s(:lit, 42)))),
-                               s(:scope, s(:block, s(:nil)))))
+                               s(:nil)))
 
   add_19tests("defn_args_opt_splat_mand",
               "Ruby"      => "def f(opt = 42, *rest, mand)\n  # do nothing\nend",
@@ -2982,7 +2866,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                s(:args, :opt, :"*rest", :mand,
                                  s(:block,
                                    s(:lasgn, :opt, s(:lit, 42)))),
-                               s(:scope, s(:block, s(:nil)))))
+                               s(:nil)))
 
   add_19tests("defn_args_opt_mand",
               "Ruby"      => "def f(opt = 42, mand)\n  # do nothing\nend",
@@ -2990,13 +2874,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                s(:args, :opt, :mand,
                                  s(:block,
                                    s(:lasgn, :opt, s(:lit, 42)))),
-                               s(:scope, s(:block, s(:nil)))))
+                               s(:nil)))
 
   add_19tests("defn_args_splat_middle",
             "Ruby"         => "def f(first, *middle, last)\n  # do nothing\nend",
             "ParseTree"    => s(:defn, :f,
                                 s(:args, :first, :"*middle", :last),
-                                s(:scope, s(:block, s(:nil)))))
+                                s(:nil)))
 
   add_19tests("fcall_arglist_hash_colons",
               "Ruby"         => "m(a: 1, b: 2)",
