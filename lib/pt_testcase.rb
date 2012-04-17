@@ -776,7 +776,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:cdecl, :X, s(:lit, 42)))
 
   add_tests("class_plain",
-            "Ruby"         => "class X\n  puts((1 + 1))\n  def blah\n    puts(\"hello\")\n  end\nend",
+            "Ruby"         => "class X\n  puts((1 + 1))\n  \n  def blah\n    puts(\"hello\")\n  end\nend",
             "ParseTree"    => s(:class, :X, nil,
                                 s(:call, nil, :puts,
                                   s(:call, s(:lit, 1), :+, s(:lit, 1))),
@@ -2305,7 +2305,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:sclass, s(:self), s(:lit, 42)))
 
   add_tests("sclass_trailing_class",
-            "Ruby"         => "class A\n  class << self\n    a\n  end\n  class B\n  end\nend",
+            "Ruby"         => "class A\n  class << self\n    a\n  end\n  \n  class B\n  end\nend",
             "ParseTree"    => s(:class, :A, nil,
                                 s(:sclass, s(:self),
                                   s(:call, nil, :a)),
