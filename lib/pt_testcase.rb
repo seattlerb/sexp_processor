@@ -2093,7 +2093,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby2Ruby"    => "a ||= b rescue c")
 
   add_tests("op_asgn_or_ivar",
-            "Ruby"         => "@v ||= {  }",
+            "Ruby"         => "@v ||= {}",
             "ParseTree"    => s(:op_asgn_or,
                                 s(:ivar, :@v),
                                 s(:iasgn, :@v, s(:hash))))
