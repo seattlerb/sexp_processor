@@ -2203,9 +2203,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :a),
                                 s(:resbody,
                                   s(:array, s(:lasgn, :e, s(:gvar, :$!))),
-                                  s(:block,
-                                    s(:call, nil, :c),
-                                    s(:call, nil, :d)))))
+                                  s(:call, nil, :c),
+                                  s(:call, nil, :d))))
 
   add_tests("rescue_block_body_3",
             "Ruby"         => "begin\n  a\nrescue A\n  b\nrescue B\n  c\nrescue C\n  d\nend",
@@ -2224,9 +2223,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :a),
                                 s(:resbody,
                                   s(:array, s(:iasgn, :@e, s(:gvar, :$!))),
-                                  s(:block,
-                                    s(:call, nil, :c),
-                                    s(:call, nil, :d)))))
+                                  s(:call, nil, :c),
+                                  s(:call, nil, :d))))
 
   add_tests("rescue_block_nada",
             "Ruby"         => "begin\n  blah\nrescue\n  # do nothing\nend",
