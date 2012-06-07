@@ -1,3 +1,17 @@
+=== 4.0.0 / 2012-06-07
+
+* 5 major enhancements:
+
+  * Removed :arglist from everything except :op_asgn1.
+  * Removed block from resbody
+  * Removed block from when node
+  * Removed block nodes inside of scope nodes (defn/defs/class/sclass).
+  * Removed scope nodes in defn/defs/class/sclass nodes.
+
+* 1 minor enhancement:
+
+  * Added Sexp#deep_each and Sexp#each_sexp. Refactored from Flay
+
 === 3.2.0 / 2012-04-15
 
 * 5 minor enhancements:

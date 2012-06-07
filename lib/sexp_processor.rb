@@ -34,7 +34,7 @@ require 'sexp'
 
 class SexpProcessor
 
-  VERSION = '3.2.0'
+  VERSION = '4.0.0'
 
   ##
   # Automatically shifts off the Sexp type before handing the
