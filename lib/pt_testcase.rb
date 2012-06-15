@@ -877,7 +877,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   nil)))
 
   add_tests("dasgn_2",
-            "Ruby"         => "a.each do |x|\n  if true then\n    c = 0\n    b.each { |y| c = (c + 1) }\n  end\nend", # FIX: hate that extra newline!
+            "Ruby"         => "a.each do |x|\n  if true then\n    c = 0\n    b.each { |y| c = (c + 1) }\n  end\nend",
             "ParseTree"    => s(:iter,
                                 s(:call, s(:call, nil, :a), :each),
                                 s(:lasgn, :x),
@@ -1689,8 +1689,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   add_tests("ivar",
             "Ruby"         => [Examples, :reader],
-            "ParseTree"    => s(:defn, :reader, # FIX should be unified?
-                                s(:args),
+            "ParseTree"    => s(:defn, :reader, s(:args),
                                 s(:ivar, :@reader)),
             "Ruby2Ruby"    => "attr_reader :reader")
 
@@ -1970,6 +1969,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => "module X\n  def y\n    # do nothing\n  end\nend",
             "ParseTree"    => s(:module, :X,
                                 s(:defn, :y, s(:args), s(:nil))))
+
+  add_tests("module2",
+            "Ruby"         => "module X\n  def y\n    # do nothing\n  end\n  def z\n    # do nothing\n  end\nend",
+            "ParseTree"    => s(:module, :X,
+                                s(:defn, :y, s(:args), s(:nil)),
+                                s(:defn, :z, s(:args), s(:nil))))
+
+
 
   add_tests("module_scoped",
             "Ruby"         => "module X::Y\n  c\nend",
