@@ -1971,7 +1971,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:defn, :y, s(:args), s(:nil))))
 
   add_tests("module2",
-            "Ruby"         => "module X\n  def y\n    # do nothing\n  end\n  def z\n    # do nothing\n  end\nend",
+            "Ruby"         => "module X\n  def y\n    # do nothing\n  end\n  \n  def z\n    # do nothing\n  end\nend",
             "ParseTree"    => s(:module, :X,
                                 s(:defn, :y, s(:args), s(:nil)),
                                 s(:defn, :z, s(:args), s(:nil))))
