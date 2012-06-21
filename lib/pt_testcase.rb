@@ -763,9 +763,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:when,
                                   s(:array,
                                     s(:lit, :b),
-                                    s(:when,
-                                      s(:call, nil, :c),
-                                      nil)), # wtf?
+                                    s(:splat, s(:call, nil, :c))),
                                   s(:call, nil, :d)),
                                 s(:call, nil, :e)))
 
