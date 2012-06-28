@@ -616,21 +616,21 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:lit, :a), s(:lit, 1),
                                   s(:lit, :b), s(:lit, 2))))
 
-  add_tests("call_arglist_norm_hash_splat",
-            "Ruby"         => "o.m(42, :a => 1, :b => 2, *c)",
-            "ParseTree"    => s(:call,
-                                s(:call, nil, :o), :m,
-                                s(:lit, 42),
-                                s(:hash,
-                                  s(:lit, :a), s(:lit, 1),
-                                  s(:lit, :b), s(:lit, 2)),
-                                s(:splat, s(:call, nil, :c))))
+  add_18tests("call_arglist_norm_hash_splat",
+              "Ruby"         => "o.m(42, :a => 1, :b => 2, *c)",
+              "ParseTree"    => s(:call,
+                                  s(:call, nil, :o), :m,
+                                  s(:lit, 42),
+                                  s(:hash,
+                                    s(:lit, :a), s(:lit, 1),
+                                    s(:lit, :b), s(:lit, 2)),
+                                  s(:splat, s(:call, nil, :c))))
 
-  add_tests("call_arglist_space",
-            "Ruby"         => "a (1,2,3)",
-            "ParseTree"    => s(:call, nil, :a,
-                                s(:lit, 1), s(:lit, 2), s(:lit, 3)),
-            "Ruby2Ruby"    => "a(1, 2, 3)")
+  add_18tests("call_arglist_space",
+              "Ruby"         => "a (1,2,3)",
+              "ParseTree"    => s(:call, nil, :a,
+                                  s(:lit, 1), s(:lit, 2), s(:lit, 3)),
+              "Ruby2Ruby"    => "a(1, 2, 3)")
 
   add_tests("call_command",
             "Ruby"         => "1.b(c)",
@@ -1356,14 +1356,14 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:lit, :a), s(:lit, 1),
                                   s(:lit, :b), s(:lit, 2))))
 
-  add_tests("fcall_arglist_norm_hash_splat",
-            "Ruby"         => "m(42, :a => 1, :b => 2, *c)",
-            "ParseTree"    => s(:call, nil, :m,
-                                s(:lit, 42),
-                                s(:hash,
-                                  s(:lit, :a), s(:lit, 1),
-                                  s(:lit, :b), s(:lit, 2)),
-                                s(:splat, s(:call, nil, :c))))
+  add_18tests("fcall_arglist_norm_hash_splat",
+              "Ruby"         => "m(42, :a => 1, :b => 2, *c)",
+              "ParseTree"    => s(:call, nil, :m,
+                                  s(:lit, 42),
+                                  s(:hash,
+                                    s(:lit, :a), s(:lit, 1),
+                                    s(:lit, :b), s(:lit, 2)),
+                                  s(:splat, s(:call, nil, :c))))
 
   add_tests("fcall_block",
             "Ruby"         => "a(:b) { :c }",
@@ -1522,11 +1522,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:if, s(:call, nil, :b),
                                 s(:call, nil, :a), nil))
 
-  add_tests("if_post_not",
-            "Ruby"         => "a if not b",
-            "ParseTree"    => s(:if, s(:call, nil, :b), nil,
-                                s(:call, nil, :a)),
-            "Ruby2Ruby"    => "a unless b")
+  add_18tests("if_post_not",
+              "Ruby"         => "a if not b",
+              "ParseTree"    => s(:if, s(:call, nil, :b), nil,
+                                  s(:call, nil, :a)),
+              "Ruby2Ruby"    => "a unless b")
+
+  add_19tests("if_post_not",
+              "Ruby"         => "a if not b",
+              "ParseTree"    => s(:if, s(:call, s(:call, nil, :b), :"!"),
+                                  s(:call, nil, :a),
+                                  nil),
+              "Ruby2Ruby"    => "a unless b")
 
   add_tests("if_pre",
             "Ruby"         => "if b then a end",
@@ -1534,11 +1541,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :a), nil),
             "Ruby2Ruby"    => "a if b")
 
-  add_tests("if_pre_not",
-            "Ruby"         => "if not b then a end",
-            "ParseTree"    => s(:if, s(:call, nil, :b), nil,
-                                s(:call, nil, :a)),
-            "Ruby2Ruby"    => "a unless b")
+  add_18tests("if_pre_not",
+              "Ruby"         => "if not b then a end",
+              "ParseTree"    => s(:if, s(:call, nil, :b), nil,
+                                  s(:call, nil, :a)),
+              "Ruby2Ruby"    => "a unless b")
+
+  add_19tests("if_pre_not",
+              "Ruby"         => "if not b then a end",
+              "ParseTree"    => s(:if, s(:call, s(:call, nil, :b), :"!"),
+                                  s(:call, nil, :a),
+                                  nil),
+              "Ruby2Ruby"    => "a unless b")
 
   add_tests("iter_call_arglist_space",
             "Ruby" => "a (1) {|c|d}",
@@ -2000,9 +2014,13 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 nil,
                                 s(:if, s(:false), s(:next, s(:lit, 42)), nil)))
 
-  add_tests("not",
-            "Ruby"         => "(not true)",
-            "ParseTree"    => s(:not, s(:true)))
+  add_18tests("not",
+              "Ruby"         => "(not true)",
+              "ParseTree"    => s(:not, s(:true)))
+
+  add_19tests("not",
+              "Ruby"         => "(not true)",
+              "ParseTree"    => s(:call, s(:true), :"!"))
 
   add_tests("nth_ref",
             "Ruby"         => "$1",
@@ -2613,11 +2631,18 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "ParseTree"    => s(:if, s(:call, nil, :b), nil,
                                 s(:call, nil, :a)))
 
-  add_tests("unless_post_not",
-            "Ruby"         => "a unless not b",
-            "ParseTree"    => s(:if, s(:call, nil, :b),
-                                s(:call, nil, :a), nil),
-            "Ruby2Ruby"    => "a if b")
+  add_18tests("unless_post_not",
+              "Ruby"         => "a unless not b",
+              "ParseTree"    => s(:if, s(:call, nil, :b),
+                                  s(:call, nil, :a), nil),
+              "Ruby2Ruby"    => "a if b")
+
+  add_19tests("unless_post_not",
+              "Ruby"         => "a unless not b",
+              "ParseTree"    => s(:if, s(:call, s(:call, nil, :b), :"!"),
+                                  nil,
+                                  s(:call, nil, :a)),
+              "Ruby2Ruby"    => "a if b")
 
   add_tests("unless_pre",
             "Ruby"         => "unless b then a end",
@@ -2625,22 +2650,35 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, nil, :a)),
             "Ruby2Ruby"    => "a unless b")
 
-  add_tests("unless_pre_not",
-            "Ruby"         => "unless not b then a end",
-            "ParseTree"    => s(:if, s(:call, nil, :b),
-                                s(:call, nil, :a), nil),
-            "Ruby2Ruby"    => "a if b")
+  add_18tests("unless_pre_not",
+              "Ruby"         => "unless not b then a end",
+              "ParseTree"    => s(:if, s(:call, nil, :b),
+                                  s(:call, nil, :a), nil),
+              "Ruby2Ruby"    => "a if b")
+
+  add_19tests("unless_pre_not",
+              "Ruby"         => "unless not b then a end",
+              "ParseTree"    => s(:if, s(:call, s(:call, nil, :b), :"!"),
+                                  nil,
+                                  s(:call, nil, :a)),
+              "Ruby2Ruby"    => "a if b")
 
   add_tests("until_post",
             "Ruby"         => "begin\n  (1 + 1)\nend until false",
             "ParseTree"    => s(:until, s(:false),
                                 s(:call, s(:lit, 1), :+, s(:lit, 1)), false))
 
-  add_tests("until_post_not",
-            "Ruby"         => "begin\n  (1 + 1)\nend until not true",
-            "ParseTree"    => s(:while, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
-            "Ruby2Ruby"    => "begin\n  (1 + 1)\nend while true")
+  add_18tests("until_post_not",
+              "Ruby"         => "begin\n  (1 + 1)\nend until not true",
+              "ParseTree"    => s(:while, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
+              "Ruby2Ruby"    => "begin\n  (1 + 1)\nend while true")
+
+  add_19tests("until_post_not",
+              "Ruby"         => "begin\n  (1 + 1)\nend until not true",
+              "ParseTree"    => s(:until, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
+              "Ruby2Ruby"    => "begin\n  (1 + 1)\nend while true")
 
   add_tests("until_pre",
             "Ruby"         => "until false do\n  (1 + 1)\nend",
@@ -2653,17 +2691,29 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
             "Ruby2Ruby"    => "until false do\n  (1 + 1)\nend")
 
-  add_tests("until_pre_not",
-            "Ruby"         => "until not true do\n  (1 + 1)\nend",
-            "ParseTree"    => s(:while, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
-            "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
+  add_18tests("until_pre_not",
+              "Ruby"         => "until not true do\n  (1 + 1)\nend",
+              "ParseTree"    => s(:while, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
 
-  add_tests("until_pre_not_mod",
-            "Ruby"         => "(1 + 1) until not true",
-            "ParseTree"    => s(:while, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
-            "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
+  add_19tests("until_pre_not",
+              "Ruby"         => "until not true do\n  (1 + 1)\nend",
+              "ParseTree"    => s(:until, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
+
+  add_18tests("until_pre_not_mod",
+              "Ruby"         => "(1 + 1) until not true",
+              "ParseTree"    => s(:while, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
+
+  add_19tests("until_pre_not_mod",
+              "Ruby"         => "(1 + 1) until not true",
+              "ParseTree"    => s(:until, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "while true do\n  (1 + 1)\nend")
 
   add_tests("valias",
             "Ruby"         => "alias $y $x",
@@ -2686,11 +2736,17 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:call, s(:lit, 3), :+, s(:lit, 4))),
                                 false))
 
-  add_tests("while_post_not",
-            "Ruby"         => "begin\n  (1 + 1)\nend while not true",
-            "ParseTree"    => s(:until, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
-            "Ruby2Ruby"    => "begin\n  (1 + 1)\nend until true")
+  add_18tests("while_post_not",
+              "Ruby"         => "begin\n  (1 + 1)\nend while not true",
+              "ParseTree"    => s(:until, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
+              "Ruby2Ruby"    => "begin\n  (1 + 1)\nend until true")
+
+  add_19tests("while_post_not",
+              "Ruby"         => "begin\n  (1 + 1)\nend while not true",
+              "ParseTree"    => s(:while, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), false),
+              "Ruby2Ruby"    => "begin\n  (1 + 1)\nend until true")
 
   add_tests("while_pre",
             "Ruby"         => "while false do\n  (1 + 1)\nend",
@@ -2707,17 +2763,29 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => "while false do\nend",
             "ParseTree"    => s(:while, s(:false), nil, true))
 
-  add_tests("while_pre_not",
-            "Ruby"         => "while not true do\n  (1 + 1)\nend",
-            "ParseTree"    => s(:until, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
-            "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend")
+  add_18tests("while_pre_not",
+              "Ruby"         => "while not true do\n  (1 + 1)\nend",
+              "ParseTree"    => s(:until, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend")
 
-  add_tests("while_pre_not_mod",
-            "Ruby"         => "(1 + 1) while not true",
-            "ParseTree"    => s(:until, s(:true),
-                                s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
-            "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend") # FIX
+  add_19tests("while_pre_not",
+              "Ruby"         => "while not true do\n  (1 + 1)\nend",
+              "ParseTree"    => s(:while, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend")
+
+  add_18tests("while_pre_not_mod",
+              "Ruby"         => "(1 + 1) while not true",
+              "ParseTree"    => s(:until, s(:true),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend") # FIX
+
+  add_19tests("while_pre_not_mod",
+              "Ruby"         => "(1 + 1) while not true",
+              "ParseTree"    => s(:while, s(:call, s(:true), :"!"),
+                                  s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
+              "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend") # FIX
 
   add_tests("xstr",
             "Ruby"         => "`touch 5`",
