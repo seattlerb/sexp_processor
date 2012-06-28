@@ -2905,7 +2905,7 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "Ruby"         => "!a",
               "ParseTree"    => s(:call,
                                   s(:call, nil, :a),
-                                  :"!@"))
+                                  :"!"))
 
   add_19tests("defn_args_splat_mand",
               "Ruby"         => "def f(*rest, mand)\n  # do nothing\nend",
