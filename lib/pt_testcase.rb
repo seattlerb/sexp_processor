@@ -220,6 +220,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
 
   @@testcases = Hash.new { |h,k| h[k] = {} }
 
+  ###
+  # 1.8 specific tests
 
   add_18tests("call_arglist_norm_hash_splat",
               "Ruby"         => "o.m(42, :a => 1, :b => 2, *c)",
@@ -348,6 +350,8 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
               "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend") # FIX
 
+  ###
+  # 1.9 specific tests
 
   add_19edgecases("lambda { (x + 1) }",
                   s(:iter,
@@ -601,6 +605,9 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
               "ParseTree"    => s(:while, s(:call, s(:true), :"!"),
                                   s(:call, s(:lit, 1), :+, s(:lit, 1)), true),
               "Ruby2Ruby"    => "until true do\n  (1 + 1)\nend") # FIX
+
+  ###
+  # Shared tests:
 
   add_tests("alias",
             "Ruby"         => "class X\n  alias :y :x\nend",
@@ -1823,7 +1830,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
             "Ruby"         => "@a = 4",
             "ParseTree"    => s(:iasgn, :@a, s(:lit, 4)))
 
-
   add_tests("if_block_condition",
             "Ruby"         => "if (x = 5\n(x + 1)) then\n  nil\nend",
             "ParseTree"    => s(:if,
@@ -1956,8 +1962,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                     s(:lasgn, :c),
                                     s(:splat))),
                                 s(:call, nil, :p, s(:lvar, :c))))
-
-
 
   add_tests("iter_masgn_splat",
             "Ruby"         => "a { |*c| p(c) }",
@@ -2201,7 +2205,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                           s(:lasgn, :b, s(:gvar, :$!))),
                                         s(:call, nil, :puts,
                                           s(:lvar, :b))))))))
-
 
   add_tests("masgn",
             "Ruby"         => "a, b = c, d",
@@ -2699,7 +2702,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
   add_tests("return_1",
             "Ruby"         => "return 1",
             "ParseTree"    => s(:return, s(:lit, 1)))
-
 
   add_tests("return_1_splatted",
             "Ruby"         => "return *1",
