@@ -420,6 +420,32 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                   :a,
                                   s(:lit, 1), s(:lit, 2), s(:lit, 3)))
 
+  add_19tests("call_bang",
+              "Ruby"         => "!a",
+              "ParseTree"    => s(:call,
+                                  s(:call, nil, :a),
+                                  :"!"))
+
+  add_19tests("call_bang_empty",
+              "Ruby"         => "! ()",
+              "ParseTree"    => s(:call, s(:nil), :"!"))
+
+  add_19tests("call_fonz",
+              "Ruby"         => "a.()",
+              "ParseTree"    => s(:call, s(:call, nil, :a), :call))
+
+  add_19tests("call_fonz_cm",
+              "Ruby"         => "a::()",
+              "ParseTree"    => s(:call, s(:call, nil, :a), :call))
+
+  add_19tests("call_not",
+              "Ruby"      => "not (42)",
+              "ParseTree" => s(:call, s(:lit, 42), :"!"))
+
+  # add_19tests("call_not_empty",
+  #             "Ruby"      => "not ()",
+  #             "ParseTree" => s(:call, s(:lit, 42), :"!"))
+
   add_19tests("call_not_equal",
             "Ruby"         => "a != b",
             "ParseTree"    => s(:call,
@@ -427,11 +453,12 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 :"!=",
                                 s(:call, nil, :b)))
 
-  add_19tests("call_unary_not",
-              "Ruby"         => "!a",
-              "ParseTree"    => s(:call,
-                                  s(:call, nil, :a),
-                                  :"!"))
+  add_19tests("call_splat_mid",
+              "Ruby"      => "def f(a = nil, *b, c) end",
+              "ParseTree" => s(:defn, :f,
+                               s(:args, :a, :"*b", :c,
+                                 s(:block, s(:lasgn, :a, s(:nil)))),
+                               s(:nil)))
 
   add_19tests("defn_args_mand_opt_mand",
               "Ruby"      => "def f(mand1, opt = 42, mand2)\n  # do nothing\nend",
