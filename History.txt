@@ -1,3 +1,17 @@
+=== 4.0.1 / 2012-07-03
+
+* 4 minor enhancements:
+
+  * 1.9: Had to version split all my 'not' tests since 1.9 is insane.
+  * 1.9: f (args) is not allowed in 1.9.
+  * 1.9: f(hash, *splat) is not allowed in 1.9.
+  * Added module2 test to verify module w/ 2+ entities
+
+* 2 bug fixes:
+
+  * 1.9: Changed !@ to ! since that is what you implement
+  * True to my wtf comment, there was a bug in my case_splat test
+
 === 4.0.0 / 2012-06-07
 
 * 5 major enhancements:
