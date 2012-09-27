@@ -370,8 +370,12 @@ class SexpProcessor
     end
 
     def []= name, val
-      hash = @env.find { |closure| closure.has_key? name } || @env.first
+      hash = @env.find { |closure| closure.has_key? name } || current
       hash[name] = val
+    end
+
+    def current
+      @env.first
     end
 
     def scope

@@ -81,4 +81,16 @@ class TestEnvironment < MiniTest::Unit::TestCase
 
     assert_equal Math::PI, @env[:var]
   end
+
+  def test_current_shadow
+    @env[:var] = 42
+    assert_equal 42, @env[:var]
+
+    @env.scope do
+      @env.current[:var] = 23
+      assert_equal 23, @env[:var]
+    end
+
+    assert_equal 42, @env[:var]
+  end
 end
