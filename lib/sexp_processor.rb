@@ -369,8 +369,16 @@ class SexpProcessor
       hash[name] if hash
     end
 
-    def []= name, val
-      hash = @env.find { |closure| closure.has_key? name } || @env.first
+    def []= name, *args
+      opt, val = if args.length == 1
+        [{}, args.first]
+      elsif args.length == 2
+        args
+      else
+        raise ArgumentError, "wrong number of arguments (#{1 + args.length} for 2)"
+      end
+
+      hash = (opt[:shadow] ? nil : @env.find { |closure| closure.has_key? name }) || @env.first
       hash[name] = val
     end
 
