@@ -1,3 +1,9 @@
+=== 4.1.0 / 2012-10-22
+
+* 1 minor enhancement:
+
+  * Added Environment#current so you can explicitly shadow variables. (meh)
+
 === 4.0.1 / 2012-07-03
 
 * 4 minor enhancements:
