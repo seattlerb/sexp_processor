@@ -256,7 +256,7 @@ class Sexp < Array # ZenTest FULL
       result = self.first.structure
     else
       result << self.first
-      self.grep(Array).each do |subexp|
+      self.grep(Sexp).each do |subexp|
         result << subexp.structure
       end
     end
