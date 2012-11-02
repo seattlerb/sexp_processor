@@ -1,3 +1,9 @@
+=== 4.1.1 / 2012-11-02
+
+* 1 minor enhancement:
+
+  * iter args revamp for ruby_parser 3 changes.
+
 === 4.1.0 / 2012-10-22
 
 * 1 minor enhancement:
