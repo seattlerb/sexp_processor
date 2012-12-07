@@ -1,4 +1,3 @@
-
 $TESTING = false unless defined? $TESTING
 
 require 'sexp'
@@ -34,7 +33,7 @@ require 'sexp'
 
 class SexpProcessor
 
-  VERSION = '4.1.2'
+  VERSION = '4.1.3'
 
   ##
   # Automatically shifts off the Sexp type before handing the
