@@ -1,3 +1,5 @@
+# encoding: US-ASCII
+
 $TESTING = true
 
 require 'minitest/unit'
