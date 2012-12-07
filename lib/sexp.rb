@@ -44,11 +44,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def ==(obj) # :nodoc:
-    if obj.class == self.class then
-      super
-    else
-      false
-    end
+    obj.class == self.class and super
   end
 
   ##
@@ -253,6 +249,7 @@ class Sexp < Array # ZenTest FULL
   def structure
     result = self.class.new
     if Array === self.first then
+      raise "When does this happen? #{self.inspect}" # TODO: remove >= 4.2.0
       result = self.first.structure
     else
       result << self.first
