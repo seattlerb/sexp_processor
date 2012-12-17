@@ -247,16 +247,15 @@ class Sexp < Array # ZenTest FULL
   # s(:a, :b, s(:c, :d), :e) => s(:a, s(:c))
 
   def structure
-    result = self.class.new
     if Array === self.first then
-      result = s(:bogus, *self).structure # TODO: remove >= 4.2.0
+      s(:bogus, *self).structure # TODO: remove >= 4.2.0
     else
-      result << self.first
-      self.grep(Sexp).each do |subexp|
-        result << subexp.structure
+      result = s(self.first)
+      self.each do |subexp|
+        result << subexp.structure if Sexp === subexp
       end
+      result
     end
-    result
   end
 
   ##
