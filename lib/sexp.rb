@@ -249,8 +249,7 @@ class Sexp < Array # ZenTest FULL
   def structure
     result = self.class.new
     if Array === self.first then
-      raise "When does this happen? #{self.inspect}" # TODO: remove >= 4.2.0
-      result = self.first.structure
+      result = s(:bogus, *self).structure # TODO: remove >= 4.2.0
     else
       result << self.first
       self.grep(Sexp).each do |subexp|

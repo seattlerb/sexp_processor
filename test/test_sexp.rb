@@ -203,6 +203,17 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal 7, s.mass
   end
 
+  def test_mass_auto_shift
+    assert_equal 1, s(:a).mass
+    assert_equal 3, s(s(:b), s(:c)).mass
+
+    s = s(s(:call, nil, :a, s(:arglist, s(:lit, 1))),
+          s(:lasgn, :c),
+          s(:call, nil, :d, s(:arglist)))
+
+    assert_equal 7, s.mass
+  end
+
   def test_method_missing
     assert_nil @sexp.not_there
     assert_equal s(:lit, 42), @basic_sexp.lit
