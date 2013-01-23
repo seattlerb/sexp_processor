@@ -263,9 +263,18 @@ class TestSexp < SexpTestCase # ZenTest FULL
     end
   end
 
+  def test_deep_clone
+    @sexp    = s(:a, 1, 2, s(:b, 3, 4), 5, 6)
+    backup = @sexp.deep_clone
+    refute_same @sexp, backup, "deep clone is broken again?"
+    assert_equal @sexp, backup, "deep clone is broken again?"
+  end
+
   def test_structure
     @sexp    = s(:a, 1, 2, s(:b, 3, 4), 5, 6)
     backup = @sexp.deep_clone
+    refute_same @sexp, backup, "deep clone is broken again?"
+    assert_equal @sexp, backup, "deep clone is broken again?"
     expected = s(:a, s(:b))
 
     assert_equal(expected, @sexp.structure)

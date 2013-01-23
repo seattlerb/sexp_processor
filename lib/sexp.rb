@@ -1,4 +1,3 @@
-
 $TESTING ||= false # unless defined $TESTING
 
 ##
@@ -210,6 +209,11 @@ class Sexp < Array # ZenTest FULL
     find_node meth, delete
   end
 
+  def respond_to? msg, private = false # :nodoc:
+    # why do I need this? Because ruby 2.0 is broken. That's why.
+    super
+  end
+
   def pretty_print(q) # :nodoc:
     nnd = ')'
     nnd << ".line(#{line})" if line && ENV['VERBOSE']
@@ -325,4 +329,3 @@ end
 def s(*args)
   Sexp.new(*args)
 end
-
