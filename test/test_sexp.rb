@@ -254,6 +254,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_shift
+    skip "https://github.com/MagLev/maglev/issues/250" if maglev?
+
     assert_equal(1, @sexp.shift)
     assert_equal(2, @sexp.shift)
     assert_equal(3, @sexp.shift)

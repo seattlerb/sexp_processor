@@ -244,7 +244,7 @@ class Sexp < Array # ZenTest FULL
   def shift
     raise "I'm empty" if self.empty?
     super
-  end if $DEBUG or $TESTING
+  end if ($DEBUG or $TESTING) and not (defined?(RUBY_ENGINE) and RUBY_ENGINE == "maglev")
 
   ##
   # Returns the bare bones structure of the sexp.
