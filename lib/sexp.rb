@@ -324,7 +324,7 @@ module SexpMatchSpecials
 end
 
 ##
-# This is just a stupid shortcut to make indentation much cleaner.
+# This is a very important shortcut to make using Sexps much more awesome.
 
 def s(*args)
   Sexp.new(*args)
