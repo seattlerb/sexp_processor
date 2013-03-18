@@ -237,6 +237,9 @@ class Sexp < Array # ZenTest FULL
     self[1..-1]
   end
 
+  alias :head :sexp_type
+  alias :rest :sexp_body
+
   ##
   # If run with debug, Sexp will raise if you shift on an empty
   # Sexp. Helps with debugging.
