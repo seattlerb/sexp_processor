@@ -2863,11 +2863,6 @@ class ParseTreeTestCase < MiniTest::Unit::TestCase
                                 s(:lvar, :a)),
             "Ruby2Ruby"    => "a = b rescue nil if c\na\n") # OMG that's awesome
 
-  add_tests("structure_unused_literal_wwtt",
-            "Ruby"         => "\"prevent the above from infecting rdoc\"\n\nmodule Graffle\nend",
-            "ParseTree"    => s(:module, :Graffle),
-            "Ruby2Ruby"    => "module Graffle\nend")
-
   add_tests("super_0",
             "Ruby"         => "def x\n  super()\nend",
             "ParseTree"    => s(:defn, :x, s(:args), s(:super)))
