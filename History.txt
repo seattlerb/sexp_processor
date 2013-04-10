@@ -1,3 +1,9 @@
+=== 4.2.1 / 2013-04-09
+
+* 1 bug fix:
+
+  * Removed structure_unused_literal_wwtt because I just don't care anymore
+
 === 4.2.0 / 2013-03-18
 
 * 2 minor enhancements:
