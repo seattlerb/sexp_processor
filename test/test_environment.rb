@@ -5,7 +5,7 @@ $TESTING = true
 require 'minitest/autorun'
 require 'sexp_processor'
 
-class TestEnvironment < MiniTest::Unit::TestCase
+class TestEnvironment < Minitest::Test
 
   def setup
     @env = SexpProcessor::Environment.new

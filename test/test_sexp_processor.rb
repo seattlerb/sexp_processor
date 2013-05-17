@@ -93,7 +93,7 @@ end
 
 # Real test classes:
 
-class TestSexpProcessor < MiniTest::Unit::TestCase
+class TestSexpProcessor < Minitest::Test
 
   def setup
     @processor = TestProcessor.new

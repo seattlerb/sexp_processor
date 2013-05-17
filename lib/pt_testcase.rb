@@ -32,7 +32,7 @@ class Examples
     RUBY_VERSION < "1.9"
 end
 
-class ParseTreeTestCase < MiniTest::Unit::TestCase
+class ParseTreeTestCase < Minitest::Test
   attr_accessor :processor # to be defined by subclass
 
   def setup

@@ -24,7 +24,7 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
   end
 end
 
-class TestCompositeSexpProcessor < MiniTest::Unit::TestCase
+class TestCompositeSexpProcessor < Minitest::Test
 
   def setup
     @p = CompositeSexpProcessor.new

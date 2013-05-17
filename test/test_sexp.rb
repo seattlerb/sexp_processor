@@ -7,7 +7,7 @@ require 'sexp_processor'
 require 'stringio'
 require 'pp'
 
-class SexpTestCase < MiniTest::Unit::TestCase
+class SexpTestCase < Minitest::Test
   # KEY for regex tests
   # :a == no change
   # :b == will change (but sometimes ONLY once)
