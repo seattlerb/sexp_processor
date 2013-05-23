@@ -2684,6 +2684,11 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "class << self\n  42\nend",
             "ParseTree"    => s(:sclass, s(:self), s(:lit, 42)))
 
+  add_tests("sclass_multiple",
+            "Ruby"         => "class << self\n  x\n  y\nend",
+            "ParseTree"    => s(:sclass, s(:self),
+                                s(:call, nil, :x), s(:call, nil, :y)))
+
   add_tests("sclass_trailing_class",
             "Ruby"         => "class A\n  class << self\n    a\n  end\n  \n  class B\n  end\nend",
             "ParseTree"    => s(:class, :A, nil,
