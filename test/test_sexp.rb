@@ -167,15 +167,20 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_gsub
-    assert_equal s(:c), s().gsub(s(), s(:c))
-    assert_equal s(:c), s(:b).gsub(s(:b), s(:c))
-    assert_equal s(:a), s(:a).gsub(s(:b), s(:c))
+    assert_equal s(:c),        s(:b).       gsub(s(:b), s(:c))
+    assert_equal s(:a),        s(:a).       gsub(s(:b), s(:c))
     assert_equal s(:a, s(:c)), s(:a, s(:b)).gsub(s(:b), s(:c))
+  end
 
+  def test_gsub_empty
+    assert_equal s(:c), s().gsub(s(), s(:c))
+  end
+
+  def test_gsub_multiple
     assert_equal(s(:a, s(:c), s(:c)),
-                 s(:a, s(:b), s(:b)).gsub(s(:b), s(:c)))
+                 s(:a, s(:b), s(:b)).        gsub(s(:b), s(:c)))
     assert_equal(s(:a, s(:c), s(:a, s(:c))),
-                 s(:a, s(:b), s(:a, s(:b))).gsub(s(:b), s(:c)))
+                 s(:a, s(:b), s(:a, s(:b))). gsub(s(:b), s(:c)))
   end
 
   def test_inspect
@@ -284,21 +289,22 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_sub
-    assert_equal s(:c), s().sub(s(), s(:c))
-    assert_equal s(:c), s(:b).sub(s(:b), s(:c))
-    assert_equal s(:a), s(:a).sub(s(:b), s(:c))
-    assert_equal s(:a, s(:c)), s(:a, s(:c)).sub(s(:b), s(:c))
+    assert_equal s(:c),               s(:b).               sub(s(:b), s(:c))
+    assert_equal s(:a, s(:c), s(:b)), s(:a, s(:b), s(:b)). sub(s(:b), s(:c))
+    assert_equal s(:a, s(:c), s(:a)), s(:a, s(:b), s(:a)). sub(s(:b), s(:c))
+  end
 
-    assert_equal s(:a, s(:c), s(:b)), s(:a, s(:b), s(:b)).sub(s(:b), s(:c))
+  def test_sub_miss
+    assert_equal s(:a),               s(:a).        sub(s(:b), s(:c))
+    assert_equal s(:a, s(:c)),        s(:a, s(:c)). sub(s(:b), s(:c))
+  end
 
-    assert_equal(s(:a, s(:c), s(:a)),
-                 s(:a, s(:b), s(:a)).sub(s(:b), s(:c)))
-    assert_equal(s(:a, s(:c), s(:a, s(:a))),
-                 s(:a, s(:b), s(:a, s(:a))).sub(s(:b), s(:c)))
-    assert_equal(s(:a, s(:a), s(:a, s(:c), s(:b))),
-                 s(:a, s(:a), s(:a, s(:b), s(:b))).sub(s(:b), s(:c)))
-    assert_equal(s(:a, s(:c, s(:b))),
-                 s(:a, s(:b)).sub(s(:b), s(:c, s(:b))))
+  def test_sub_empty
+    assert_equal s(:c),               s().          sub(s(), s(:c))
+  end
+
+  def test_sub_structure
+    assert_equal(s(:a, s(:c, s(:b))), s(:a, s(:b)). sub(s(:b), s(:c, s(:b))))
   end
 
   def test_to_a
