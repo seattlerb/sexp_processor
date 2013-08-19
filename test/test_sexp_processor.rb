@@ -151,12 +151,12 @@ class TestSexpProcessor < Minitest::Test
       @processor.process([:blah, 1, 2, 3])
     end
   end
-  def test_strict=; end #Handled
+  def test_strict=; skip; end #Handled
 
   def test_require_empty_false
     @processor.require_empty = false
 
-    @processor.process([:nonempty, 1, 2, 3])
+    assert_equal s(:nonempty, 1, 2, 3), @processor.process([:nonempty, 1, 2, 3])
   end
 
   def test_require_empty_true
@@ -164,7 +164,7 @@ class TestSexpProcessor < Minitest::Test
       @processor.process([:nonempty, 1, 2, 3])
     end
   end
-  def test_require_empty=; end # handled
+  def test_require_empty=; skip; end # handled
 
   def test_process_strip
     @processor.auto_shift_type = true
@@ -239,7 +239,7 @@ class TestSexpProcessor < Minitest::Test
   end
 
   def test_assert_type_hit
-    @processor.assert_type([:blah, 1, 2, 3], :blah)
+    assert_nil @processor.assert_type([:blah, 1, 2, 3], :blah)
   end
 
   def test_assert_type_miss
@@ -249,7 +249,7 @@ class TestSexpProcessor < Minitest::Test
   end
 
   def test_generate
-    # nothing to test at this time... soon.
+    skip "nothing to test at this time... soon."
   end
 
   def test_auto_shift_type
@@ -258,7 +258,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.auto_shift_type = true
     assert_equal(true, @processor.auto_shift_type)
   end
-  def test_auto_shift_type_equal; end # handled
+  def test_auto_shift_type_equal; skip; end # handled
 
   def test_default_method
     # default functionality tested in process_default
@@ -266,7 +266,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.default_method = :something
     assert_equal :something, @processor.default_method
   end
-  def test_default_method=; end # handled
+  def test_default_method=; skip; end # handled
 
   def test_expected
     assert_equal Sexp, @processor.expected
@@ -286,12 +286,12 @@ class TestSexpProcessor < Minitest::Test
 
     @processor.process([:expected])        # shouldn't raise
   end
-  def test_expected=; end # handled
+  def test_expected=; skip; end # handled
 
   # Not Testing:
-  def test_debug; end
-  def test_debug=; end
-  def test_warn_on_default; end
-  def test_warn_on_default=; end
+  def test_debug; skip; end
+  def test_debug=; skip; end
+  def test_warn_on_default; skip; end
+  def test_warn_on_default=; skip; end
 
 end

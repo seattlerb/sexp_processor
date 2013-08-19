@@ -28,10 +28,6 @@ class SexpTestCase < Minitest::Test
   def setup
     @any = ANY()
   end
-
-  def test_stupid
-    # shuts up test/unit
-  end
 end
 
 class TestSexp < SexpTestCase # ZenTest FULL
@@ -61,11 +57,11 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_class_from_array
-#    raise NotImplementedError, 'Need to write test_class_from_array'
+    skip 'Need to write test_class_from_array'
   end
 
   def test_class_index
-#    raise NotImplementedError, 'Need to write test_class_index'
+    skip 'Need to write test_class_index'
   end
 
   def test_array_type_eh
@@ -101,7 +97,9 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_equals2_sexp
     sexp2 = s(1, 2, 3)
-    unless @sexp.class == Sexp then
+    if @sexp.class == Sexp then
+      skip "Not applicable to this target."
+    else
       refute_equal(@sexp, sexp2)
     end
   end

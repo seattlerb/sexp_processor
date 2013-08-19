@@ -53,6 +53,7 @@ class TestCompositeSexpProcessor < Minitest::Test
 
   def test_processors
     # everything is tested by test_append
+    skip
   end
 
   def test_append
