@@ -404,6 +404,196 @@ class SexpInterpreter < SexpProcessor
   end
 end
 
+##
+# A simple subclass of SexpProcessor that tracks method and class
+# stacks for you. Use #method_name, #klass_name, or #signature to
+# refer to where you're at in processing. If you have to subclass
+# process_(class|module|defn|defs) you _must_ call super.
+
+class MethodBasedSexpProcessor < SexpProcessor
+  @@no_class  = :main
+  @@no_method = :none
+
+  attr_reader :class_stack, :method_stack, :sclass, :method_locations
+
+  def initialize
+    super
+    @sclass              = []
+    @class_stack         = []
+    @method_stack        = []
+    @method_locations    = {}
+  end
+
+  ##
+  # Adds name to the class stack, for the duration of the block
+
+  def in_klass name
+    if Sexp === name then
+      name = case name.first
+             when :colon2 then
+               name = name.flatten
+               name.delete :const
+               name.delete :colon2
+               name.join("::")
+             when :colon3 then
+               name.last.to_s
+             else
+               raise "unknown type #{name.inspect}"
+             end
+    end
+
+    @class_stack.unshift name
+    yield
+  ensure
+    @class_stack.shift
+  end
+
+  ##
+  # Adds name to the method stack, for the duration of the block
+
+  def in_method(name, file, line)
+    method_name = Regexp === name ? name.inspect : name.to_s
+    @method_stack.unshift method_name
+    @method_locations[signature] = "#{file}:#{line}"
+    yield
+  ensure
+    @method_stack.shift
+  end
+
+  ##
+  # Tracks whether we're in a singleton class or not. Doesn't track
+  # actual receiver.
+
+  def in_sklass
+    @sclass.push true
+    yield
+  ensure
+    @sclass.pop
+  end
+
+  ##
+  # Returns the first class in the list, or @@no_class if there are
+  # none.
+
+  def klass_name
+    name = @class_stack.first
+
+    if Sexp === name then
+      raise "you shouldn't see me"
+    elsif @class_stack.any?
+      @class_stack.reverse.join("::").sub(/\([^\)]+\)$/, '')
+    else
+      @@no_class
+    end
+  end
+
+  ##
+  # Returns the first method in the list, or "#none" if there are
+  # none.
+
+  def method_name
+    m = @method_stack.first || @@no_method
+    m = "##{m}" unless m =~ /::/
+    m
+  end
+
+  ##
+  # Process a class node until empty. Tracks all nesting. If you have
+  # to subclass and override this method, you can clall super with a
+  # block.
+
+  def process_class(exp)
+    in_klass exp.shift do
+      if block_given? then
+        yield
+      else
+        process_until_empty exp
+      end
+    end
+    s()
+  end
+
+  ##
+  # Process a method node until empty. Tracks your location. If you
+  # have to subclass and override this method, you can clall super
+  # with a block.
+
+  def process_defn(exp)
+    name = @sclass.empty? ? exp.shift : "::#{exp.shift}"
+    in_method name, exp.file, exp.line do
+      if block_given? then
+        yield
+      else
+        process_until_empty exp
+      end
+    end
+    s()
+  end
+
+  ##
+  # Process a singleton method node until empty. Tracks your location.
+  # If you have to subclass and override this method, you can clall
+  # super with a block.
+
+  def process_defs(exp)
+    process exp.shift # recv
+    in_method "::#{exp.shift}", exp.file, exp.line do
+      if block_given? then
+        yield
+      else
+        process_until_empty exp
+      end
+    end
+    s()
+  end
+
+  ##
+  # Process a module node until empty. Tracks all nesting. If you have
+  # to subclass and override this method, you can clall super with a
+  # block.
+
+  def process_module(exp)
+    in_klass exp.shift do
+      if block_given? then
+        yield
+      else
+        process_until_empty exp
+      end
+    end
+    s()
+  end
+
+  ##
+  # Process a singleton class node until empty. Tracks all nesting. If
+  # you have to subclass and override this method, you can clall super
+  # with a block.
+
+  def process_sclass(exp)
+    in_sklass do
+      if block_given? then
+        yield
+      else
+        process_until_empty exp
+      end
+    end
+    s()
+  end
+
+  ##
+  # Process each element of #exp in turn.
+
+  def process_until_empty exp
+    process exp.shift until exp.empty?
+  end
+
+  ##
+  # Returns the method signature for the current method.
+
+  def signature
+    "#{klass_name}#{method_name}"
+  end
+end
+
 class Object
 
   ##

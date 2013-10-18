@@ -295,3 +295,78 @@ class TestSexpProcessor < Minitest::Test
   def test_warn_on_default=; skip; end
 
 end
+
+class TestMethodBasedSexpProcessor < Minitest::Test
+  attr_accessor :processor
+
+  def setup
+    self.processor = MethodBasedSexpProcessor.new
+  end
+
+  def test_in_klass
+    assert_empty processor.class_stack
+
+    processor.in_klass "xxx::yyy" do
+      assert_equal ["xxx::yyy"], processor.class_stack
+    end
+
+    assert_empty processor.class_stack
+  end
+
+  def test_in_method
+    assert_empty processor.method_stack
+
+    processor.in_method "xxx", "file.rb", 42 do
+      assert_equal ["xxx"], processor.method_stack
+    end
+
+    assert_empty processor.method_stack
+
+    expected = {"main#xxx" => "file.rb:42"}
+    assert_equal expected, processor.method_locations
+  end
+
+  def test_klass_name
+    assert_equal :main, processor.klass_name
+
+    processor.class_stack << "whatevs" << "flog"
+    assert_equal "flog::whatevs", processor.klass_name
+  end
+
+  def test_klass_name_sexp
+    processor.in_klass s(:colon2, s(:const, :X), :Y) do
+      assert_equal "X::Y", processor.klass_name
+    end
+
+    processor.in_klass s(:colon3, :Y) do
+      assert_equal "Y", processor.klass_name
+    end
+  end
+
+  def test_method_name
+    assert_equal "#none", processor.method_name
+
+    processor.method_stack << "whatevs"
+    assert_equal "#whatevs", processor.method_name
+  end
+
+  def test_method_name_cls
+    assert_equal "#none", processor.method_name
+
+    processor.method_stack << "::whatevs"
+    assert_equal "::whatevs", processor.method_name
+  end
+
+  def test_signature
+    assert_equal "main#none", processor.signature
+
+    processor.class_stack << "X"
+    assert_equal "X#none", processor.signature
+
+    processor.method_stack << "y"
+    assert_equal "X#y", processor.signature
+
+    processor.class_stack.shift
+    assert_equal "main#y", processor.signature
+  end
+end
