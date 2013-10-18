@@ -422,6 +422,7 @@ class MethodBasedSexpProcessor < SexpProcessor
     @class_stack         = []
     @method_stack        = []
     @method_locations    = {}
+    self.require_empty   = false
   end
 
   ##
@@ -503,6 +504,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # block.
 
   def process_class(exp)
+    exp.shift unless auto_shift_type # node type
     in_klass exp.shift do
       if block_given? then
         yield
@@ -519,6 +521,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # with a block.
 
   def process_defn(exp)
+    exp.shift unless auto_shift_type # node type
     name = @sclass.empty? ? exp.shift : "::#{exp.shift}"
     in_method name, exp.file, exp.line do
       if block_given? then
@@ -536,6 +539,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # super with a block.
 
   def process_defs(exp)
+    exp.shift unless auto_shift_type # node type
     process exp.shift # recv
     in_method "::#{exp.shift}", exp.file, exp.line do
       if block_given? then
@@ -553,6 +557,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # block.
 
   def process_module(exp)
+    exp.shift unless auto_shift_type # node type
     in_klass exp.shift do
       if block_given? then
         yield
@@ -569,6 +574,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # with a block.
 
   def process_sclass(exp)
+    exp.shift unless auto_shift_type # node type
     in_sklass do
       if block_given? then
         yield
@@ -583,7 +589,10 @@ class MethodBasedSexpProcessor < SexpProcessor
   # Process each element of #exp in turn.
 
   def process_until_empty exp
-    process exp.shift until exp.empty?
+    until exp.empty?
+      sexp = exp.shift
+      process sexp if Sexp === sexp
+    end
   end
 
   ##
