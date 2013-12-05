@@ -2853,7 +2853,7 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:call, nil, :b),
                                   s(:resbody, s(:array),
                                     s(:call, nil, :c)))),
-            "Ruby2Ruby"    => "(a << b rescue c)")
+            "Ruby2Ruby"    => "(a << (b rescue c))")
 
   add_tests("structure_remove_begin_2",
             "Ruby"         => "a = if c\n      begin\n        b\n      rescue\n        nil\n      end\n    end\na",
