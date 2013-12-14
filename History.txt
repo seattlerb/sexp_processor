@@ -1,3 +1,9 @@
+=== 4.4.1 / 2013-12-13
+
+* 1 bug fix:
+
+  * Added parenthesis to fix the structure_remove_begin_1 testcase. (bocete)
+
 === 4.4.0 / 2013-10-18
 
 * 1 minor enhancement:
