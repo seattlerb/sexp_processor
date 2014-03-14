@@ -105,9 +105,11 @@ class ParseTreeTestCase < Minitest::Test
     klass.send :define_method, "test_#{node}" do
       flunk "Processor is nil" if processor.nil?
 
-      if node =~ /(1[89])$/ then
+      if node =~ /(1[89]|2[01])$/ then
         version = $1
-        skip "version specific test" unless self.class.name =~ /#{version}/
+        # can't push this up because it may be generating into an
+        # abstract test class and the actual subclass is versioned.
+        return "version specific test" unless self.class.name =~ /#{version}/
       end
 
       assert data.has_key?(input_name), "Unknown input data"
