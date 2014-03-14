@@ -1,3 +1,10 @@
+=== 4.4.2 / 2014-03-14
+
+* 2 minor enhancements:
+
+  * Changed skipped versioned tests to return, not skip. Reduces noise so you can focus on real skips.
+  * Extended versioned tests to include 2.0 and 2.1.
+
 === 4.4.1 / 2013-12-13
 
 * 1 bug fix:
