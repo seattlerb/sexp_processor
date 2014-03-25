@@ -1,3 +1,9 @@
+=== 4.4.3 / 2014-03-24
+
+* 1 bug fix:
+
+  * Fixed a bunch of pt_testcase entries for 1.9/2.0 wrt ruby2ruby.
+
 === 4.4.2 / 2014-03-14
 
 * 2 minor enhancements:
