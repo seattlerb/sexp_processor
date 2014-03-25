@@ -356,7 +356,7 @@ class ParseTreeTestCase < Minitest::Test
   ###
   # 1.9 specific tests
 
-  add_19edgecases("lambda { (x + 1) }",
+  add_19edgecases("lambda { || (x + 1) }",
                   s(:iter,
                     s(:call, nil, :lambda),
                     0,
@@ -393,7 +393,8 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:lit, :a),
                                   s(:hash,
                                     s(:lit, :b),
-                                    s(:lit, :c))))
+                                    s(:lit, :c))),
+              "Ruby2Ruby"    => "[:a, { :b => :c }]")
 
   add_19tests("array_bare_hash_labels",
               "Ruby"         => "[:a, b: :c]",
@@ -401,7 +402,8 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:lit, :a),
                                   s(:hash,
                                     s(:lit, :b),
-                                    s(:lit, :c))))
+                                    s(:lit, :c))),
+              "Ruby2Ruby"    => "[:a, { :b => :c }]")
 
   add_19tests("call_arglist_norm_hash_colons",
               "Ruby"         => "o.m(42, a: 1, b: 2)",
@@ -411,14 +413,16 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:lit, 42),
                                   s(:hash,
                                     s(:lit, :a), s(:lit, 1),
-                                    s(:lit, :b), s(:lit, 2))))
+                                    s(:lit, :b), s(:lit, 2))),
+              "Ruby2Ruby"    => "o.m(42, :a => 1, :b => 2)")
 
   add_19tests("call_arglist_trailing_comma",
-            "Ruby"         => "a(1,2,3,)",
+              "Ruby"         => "a(1,2,3,)",
               "ParseTree"    => s(:call,
                                   nil,
                                   :a,
-                                  s(:lit, 1), s(:lit, 2), s(:lit, 3)))
+                                  s(:lit, 1), s(:lit, 2), s(:lit, 3)),
+              "Ruby2Ruby"    => "a(1, 2, 3)")
 
   add_19tests("call_bang",
               "Ruby"         => "!a",
@@ -432,11 +436,13 @@ class ParseTreeTestCase < Minitest::Test
 
   add_19tests("call_fonz",
               "Ruby"         => "a.()",
-              "ParseTree"    => s(:call, s(:call, nil, :a), :call))
+              "ParseTree"    => s(:call, s(:call, nil, :a), :call),
+              "Ruby2Ruby"    => "a.call")
 
   add_19tests("call_fonz_cm",
               "Ruby"         => "a::()",
-              "ParseTree"    => s(:call, s(:call, nil, :a), :call))
+              "ParseTree"    => s(:call, s(:call, nil, :a), :call),
+              "Ruby2Ruby"    => "a.call")
 
   add_19tests("call_not",
               "Ruby"      => "not (42)",
@@ -454,7 +460,7 @@ class ParseTreeTestCase < Minitest::Test
                                 s(:call, nil, :b)))
 
   add_19tests("call_splat_mid",
-              "Ruby"      => "def f(a = nil, *b, c) end",
+              "Ruby"      => "def f(a = nil, *b, c)\n  # do nothing\nend",
               "ParseTree" => s(:defn, :f,
                                s(:args, s(:lasgn, :a, s(:nil)), :"*b", :c),
                                s(:nil)))
@@ -500,25 +506,29 @@ class ParseTreeTestCase < Minitest::Test
               "ParseTree"    => s(:call, nil, :m,
                                   s(:hash,
                                     s(:lit, :a), s(:lit, 1),
-                                    s(:lit, :b), s(:lit, 2))))
+                                    s(:lit, :b), s(:lit, 2))),
+              "Ruby2Ruby"    => "m(:a => 1, :b => 2)")
 
   add_19tests("hash_new",
               "Ruby"         => "{ a: 1, b: 2 }",
               "ParseTree"    => s(:hash,
                                   s(:lit, :a), s(:lit, 1),
-                                  s(:lit, :b), s(:lit, 2)))
+                                  s(:lit, :b), s(:lit, 2)),
+              "Ruby2Ruby"    => "{ :a => 1, :b => 2 }")
 
   add_19tests("hash_new_no_space",
               "Ruby"         => "{a:1,b:2}",
               "ParseTree"    => s(:hash,
                                   s(:lit, :a), s(:lit, 1),
-                                  s(:lit, :b), s(:lit, 2)))
+                                  s(:lit, :b), s(:lit, 2)),
+              "Ruby2Ruby"    => "{ :a => 1, :b => 2 }")
 
   add_19tests("hash_new_with_keyword",
               "Ruby"         => "{ true: 1, b: 2 }",
               "ParseTree"    => s(:hash,
                                   s(:lit, :true), s(:lit, 1),
-                                  s(:lit, :b), s(:lit, 2)))
+                                  s(:lit, :b), s(:lit, 2)),
+              "Ruby2Ruby"    => "{ :true => 1, :b => 2 }")
 
   add_19tests("if_post_not",
               "Ruby"         => "a if not b",
@@ -535,19 +545,21 @@ class ParseTreeTestCase < Minitest::Test
               "Ruby2Ruby"    => "a unless b")
 
   add_19tests("label_in_bare_hash_in_array_in_ternary",
-            "Ruby"         => "1 ? [:a, b: 2] : 1",
+              "Ruby"         => "1 ? [:a, b: 2] : 1",
               "ParseTree"    => s(:if, s(:lit, 1),
                                   s(:array,
                                     s(:lit, :a),
                                     s(:hash, s(:lit, :b), s(:lit, 2))),
-                                  s(:lit, 1)))
+                                  s(:lit, 1)),
+              "Ruby2Ruby"    => "1 ? ([:a, { :b => 2 }]) : (1)")
 
   add_19tests("label_in_callargs_in_ternary",
-            "Ruby"         => "1 ? m(a: 2) : 1",
+              "Ruby"         => "1 ? m(a: 2) : 1",
               "ParseTree"    => s(:if, s(:lit, 1),
                                   s(:call, nil, :m,
                                     s(:hash, s(:lit, :a), s(:lit, 2))),
-                                  s(:lit, 1)))
+                                  s(:lit, 1)),
+              "Ruby2Ruby"    => "1 ? (m(:a => 2)) : (1)")
 
   add_19tests("not",
               "Ruby"         => "(not true)",
