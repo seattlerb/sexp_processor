@@ -444,7 +444,10 @@ class MethodBasedSexpProcessor < SexpProcessor
     end
 
     @class_stack.unshift name
-    yield
+
+    with_new_method_stack do
+      yield
+    end
   ensure
     @class_stack.shift
   end
@@ -467,7 +470,10 @@ class MethodBasedSexpProcessor < SexpProcessor
 
   def in_sklass
     @sclass.push true
-    yield
+
+    with_new_method_stack do
+      yield
+    end
   ensure
     @sclass.pop
   end
@@ -600,6 +606,18 @@ class MethodBasedSexpProcessor < SexpProcessor
 
   def signature
     "#{klass_name}#{method_name}"
+  end
+
+  ##
+  # Reset the method stack for the duration of the block. Used for
+  # class scoping.
+
+  def with_new_method_stack
+    old_method_stack, @method_stack = @method_stack, []
+
+    yield
+  ensure
+    @method_stack = old_method_stack
   end
 end
 

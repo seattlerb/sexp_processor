@@ -306,8 +306,11 @@ class TestMethodBasedSexpProcessor < Minitest::Test
   def test_in_klass
     assert_empty processor.class_stack
 
-    processor.in_klass "xxx::yyy" do
-      assert_equal ["xxx::yyy"], processor.class_stack
+    processor.in_method "method", "file", 42 do
+      processor.in_klass "xxx::yyy" do
+        assert_equal ["xxx::yyy"], processor.class_stack
+        assert_empty processor.method_stack
+      end
     end
 
     assert_empty processor.class_stack
