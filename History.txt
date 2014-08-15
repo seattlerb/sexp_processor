@@ -1,3 +1,9 @@
+=== 4.4.4 / 2014-08-14
+
+* 1 bug fix:
+
+  * MethodBasedSexpProcessor#in_klass clears out the method_stack for the duration of the block.
+
 === 4.4.3 / 2014-03-24
 
 * 1 bug fix:
