@@ -222,6 +222,15 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal s(:lit, 42), @basic_sexp.lit
   end
 
+  def test_method_missing_raises
+    Sexp.method_missing_raises = true
+    assert_raises NoMethodError do
+      @sexp.not_there
+    end
+  ensure
+    Sexp.method_missing_raises = false
+  end
+
   def test_method_missing_ambigious
     assert_raises NoMethodError do
       pirate = s(:says, s(:arrr!), s(:arrr!), s(:arrr!))

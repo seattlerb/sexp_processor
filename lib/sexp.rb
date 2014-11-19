@@ -14,6 +14,26 @@ class Sexp < Array # ZenTest FULL
   @@array_types = [ :array, :args, ]
 
   ##
+  # Setter for class attribute: method_missing_raises.
+  #
+  # See #method_missing
+
+  def self.method_missing_raises= o
+    @method_missing_raises = o
+  end
+
+  ##
+  # Getter for class attribute: method_missing_raises.
+  #
+  # See #method_missing
+
+  def self.method_missing_raises
+    @method_missing_raises
+  end
+
+  self.method_missing_raises = nil
+
+  ##
   # Create a new Sexp containing +args+.
 
   def initialize(*args)
@@ -206,7 +226,7 @@ class Sexp < Array # ZenTest FULL
   # Returns the node named +node+, deleting it if +delete+ is true.
 
   def method_missing meth, delete = false
-    find_node meth, delete
+    find_node meth, delete or (self.class.method_missing_raises and super)
   end
 
   def respond_to? msg, private = false # :nodoc:
