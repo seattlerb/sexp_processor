@@ -1,5 +1,3 @@
-#!/usr/local/bin/ruby -w
-
 $TESTING = true
 
 require 'sexp_processor'
