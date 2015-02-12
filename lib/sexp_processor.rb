@@ -93,6 +93,23 @@ class SexpProcessor
   attr_reader :env
 
   ##
+  # Expand an array of directories into a flattened array of paths, eg:
+  #
+  #     MyProcessor.run MyProcessor.expand_dirs_to_files ARGV
+
+  def self.expand_dirs_to_files *dirs
+    extensions = %w[rb rake]
+
+    dirs.flatten.map { |p|
+      if File.directory? p then
+        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+      else
+        p
+      end
+    }.flatten.sort
+  end
+
+  ##
   # Creates a new SexpProcessor.  Use super to invoke this
   # initializer from SexpProcessor subclasses, then use the
   # attributes above to customize the functionality of the
