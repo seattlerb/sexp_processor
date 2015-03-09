@@ -15,6 +15,8 @@ for your language processing pleasure.
 
   * Allows you to write very clean filters.
 
+* Sexp provides a simple and clean interface to creating and manipulating ASTs.
+
 == SYNOPSIS:
 
   class MyProcessor < SexpProcessor
