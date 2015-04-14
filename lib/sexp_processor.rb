@@ -110,6 +110,20 @@ class SexpProcessor
   end
 
   ##
+  # Cache processor methods per class.
+
+  def self.processors
+    @processors ||= {}
+  end
+
+  ##
+  # Cache rewiter methods per class.
+
+  def self.rewriters
+    @rewriters ||= {}
+  end
+
+  ##
   # Creates a new SexpProcessor.  Use super to invoke this
   # initializer from SexpProcessor subclasses, then use the
   # attributes above to customize the functionality of the
@@ -130,16 +144,18 @@ class SexpProcessor
 
     # we do this on an instance basis so we can subclass it for
     # different processors.
-    @processors = {}
-    @rewriters  = {}
+    @processors = self.class.processors
+    @rewriters  = self.class.rewriters
     @context    = []
 
-    public_methods.each do |name|
-      case name
-      when /^process_(.*)/ then
-        @processors[$1.to_sym] = name.to_sym
-      when /^rewrite_(.*)/ then
-        @rewriters[$1.to_sym]  = name.to_sym
+    if @processors.empty?
+      public_methods.each do |name|
+        case name
+        when /^process_(.*)/ then
+          @processors[$1.to_sym] = name.to_sym
+        when /^rewrite_(.*)/ then
+          @rewriters[$1.to_sym]  = name.to_sym
+        end
       end
     end
   end
