@@ -359,7 +359,7 @@ class ParseTreeTestCase < Minitest::Test
   add_19edgecases("lambda { || (x + 1) }",
                   s(:iter,
                     s(:call, nil, :lambda),
-                    0,
+                    s(:args),
                     s(:call, s(:call, nil, :x), :+, s(:lit, 1))),
                   "stabby_args_0"                 => "->() { (x + 1) }",
                   "stabby_args_0_doend"           => "->() do (x + 1) end",
