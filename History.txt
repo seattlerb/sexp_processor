@@ -1,3 +1,9 @@
+=== 4.5.1 / 2015-04-27
+
+* 1 minor enhancement:
+
+  * Cache processors and rewriters. Significant speedup. (presidentbeef)
+
 === 4.5.0 / 2015-03-09
 
 * 1 minor enhancement:
