@@ -1,3 +1,14 @@
+=== 4.6.0 / 2015-05-28
+
+* 2 minor enhancements:
+
+  * Extended generate_test to deal with 19 and up.
+  * Extended pt_testcase.rb so add_19tests means 19 and up.
+
+* 1 bug fix:
+
+  * Added and normalized tests to deal with canonicalized block args from ruby_parser.
+
 === 4.5.1 / 2015-04-27
 
 * 1 minor enhancement:
