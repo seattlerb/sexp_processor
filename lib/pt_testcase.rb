@@ -76,7 +76,7 @@ class ParseTreeTestCase < Minitest::Test
   end
 
   def self.add_19tests name, hash
-    add_tests "#{name}__19", hash
+    add_tests "#{name}__19_20_21_22", hash # HACK?
   end
 
   def self.add_19edgecases ruby, sexp, cases
@@ -101,15 +101,19 @@ class ParseTreeTestCase < Minitest::Test
     testcases[verbose][klass] = testcases[nonverbose][klass]
   end
 
+  VER_RE = "(1[89]|2[012])"
+
   def self.generate_test klass, node, data, input_name, output_name
     klass.send :define_method, "test_#{node}" do
       flunk "Processor is nil" if processor.nil?
 
-      if node =~ /(1[89]|2[01])$/ then
-        version = $1
+      tversions = node[/(?:_#{VER_RE})+$/]
+      if tversions then
+        cversion = self.class.name[/#{VER_RE}/]
+
         # can't push this up because it may be generating into an
         # abstract test class and the actual subclass is versioned.
-        return "version specific test" unless self.class.name =~ /#{version}/
+        return "version specific test" unless tversions.include? cversion if cversion
       end
 
       assert data.has_key?(input_name), "Unknown input data"
@@ -359,10 +363,16 @@ class ParseTreeTestCase < Minitest::Test
   add_19edgecases("lambda { || (x + 1) }",
                   s(:iter,
                     s(:call, nil, :lambda),
+                    s(:args),
+                    s(:call, s(:call, nil, :x), :+, s(:lit, 1))),
+                  "stabby_args"                   => "->() { (x + 1) }",
+                  "stabby_args_doend"             => "->() do (x + 1) end")
+
+  add_19edgecases("lambda { (x + 1) }",
+                  s(:iter,
+                    s(:call, nil, :lambda),
                     0,
                     s(:call, s(:call, nil, :x), :+, s(:lit, 1))),
-                  "stabby_args_0"                 => "->() { (x + 1) }",
-                  "stabby_args_0_doend"           => "->() do (x + 1) end",
                   "stabby_args_0_no_parens"       => "-> { (x + 1) }",
                   "stabby_args_0_no_parens_doend" => "-> do (x + 1) end",
                   "stabby_args_0_spacebar_broken" => "->{x+1}") # I hate you
@@ -813,7 +823,7 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  end\nend",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :a, s(:call, nil, :b)),
-                                s(:args),
+                                0,
                                 s(:if,
                                   s(:call, nil, :b),
                                   s(:true),
@@ -970,14 +980,14 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "loop { break if true }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :loop),
-                                s(:args),
+                                0,
                                 s(:if, s(:true), s(:break), nil)))
 
   add_tests("break_arg",
             "Ruby"         => "loop { break 42 if true }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :loop),
-                                s(:args),
+                                0,
                                 s(:if, s(:true), s(:break, s(:lit, 42)), nil)))
 
   add_tests("call",
@@ -1282,13 +1292,13 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "a do\n  v = nil\n  assert_block(full_message) do\n    begin\n      yield\n    rescue Exception => v\n      break\n    end\n  end\nend",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :a),
-                                s(:args),
+                                0,
                                 s(:block,
                                   s(:lasgn, :v, s(:nil)),
                                   s(:iter,
                                     s(:call, nil, :assert_block,
                                       s(:call, nil, :full_message)),
-                                    s(:args),
+                                    0,
                                     s(:rescue,
                                       s(:yield),
                                       s(:resbody,
@@ -1720,7 +1730,7 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "a(:b) { :c }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :a, s(:lit, :b)),
-                                s(:args),
+                                0,
                                 s(:lit, :c)))
 
   add_tests("fcall_index_space",
@@ -1943,7 +1953,7 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("iter_loop_empty",
             "Ruby"         => "loop { }",
-            "ParseTree"    => s(:iter, s(:call, nil, :loop), s(:args)))
+            "ParseTree"    => s(:iter, s(:call, nil, :loop), 0))
 
   add_tests("iter_masgn_2",
             "Ruby"         => "a { |b, c| p(c) }",
@@ -2181,7 +2191,7 @@ class ParseTreeTestCase < Minitest::Test
                                 s(:defn, :a, s(:args),
                                   s(:iter,
                                     s(:call, nil, :c),
-                                    s(:args),
+                                    0,
                                     s(:rescue,
                                       s(:call, nil, :do_stuff),
                                       s(:resbody,
@@ -2394,14 +2404,14 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "loop { next if false }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :loop),
-                                s(:args),
+                                0,
                                 s(:if, s(:false), s(:next), nil)))
 
   add_tests("next_arg",
             "Ruby"         => "loop { next 42 if false }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :loop),
-                                s(:args),
+                                0,
                                 s(:if, s(:false), s(:next, s(:lit, 42)), nil)))
 
   add_tests("nth_ref",
@@ -2551,13 +2561,13 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("postexe",
             "Ruby"         => "END { 1 }",
-            "ParseTree"    => s(:iter, s(:postexe), s(:args), s(:lit, 1)))
+            "ParseTree"    => s(:iter, s(:postexe), 0, s(:lit, 1)))
 
   add_tests("proc_args_0",
             "Ruby"         => "proc { || (x + 1) }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :proc),
-                                0,
+                                s(:args),
                                 s(:call, s(:call, nil, :x), :+, s(:lit, 1))))
 
   add_tests("proc_args_1",
@@ -2578,14 +2588,14 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "proc { (x + 1) }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :proc),
-                                s(:args),
+                                0,
                                 s(:call, s(:call, nil, :x), :+, s(:lit, 1))))
 
   add_tests("redo",
             "Ruby"         => "loop { redo if false }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :loop),
-                                s(:args),
+                                0,
                                 s(:if, s(:false), s(:redo), nil)))
 
   add_tests("rescue",  # TODO: need a resbody w/ multiple classes and a splat
