@@ -1,3 +1,4 @@
+require 'set'
 $TESTING ||= false # unless defined $TESTING
 
 ##
@@ -150,8 +151,20 @@ class Sexp < Array # ZenTest FULL
     return Sexp.from_array(new)
   end
 
-  def inspect # :nodoc:
-    sexp_str = self.map {|x|x.inspect}.join(', ')
+  def inspect(seen = Set.new) # :nodoc:
+    if seen.include? self.object_id
+      sexp_str = '...'
+    else
+      seen << self.object_id
+      sexp_str = self.map do |x|
+        if x.is_a? Sexp
+          x.inspect seen
+        else
+          x.inspect
+        end
+      end.join(', ')
+    end
+
     if ENV['VERBOSE'] && line then
       "s(#{sexp_str}).line(#{line})"
     else
