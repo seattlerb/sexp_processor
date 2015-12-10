@@ -74,10 +74,10 @@ class TestEnvironment < Minitest::Test
 
     @env.scope do
       @env[:var] = Math::PI
-      assert_equal Math::PI, @env[:var]
+      assert_in_epsilon Math::PI, @env[:var]
     end
 
-    assert_equal Math::PI, @env[:var]
+    assert_in_epsilon Math::PI, @env[:var]
   end
 
   def test_current_shadow
