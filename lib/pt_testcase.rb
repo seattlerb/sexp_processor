@@ -1488,19 +1488,21 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("defs_empty",
             "Ruby"         => "def self.empty\n  # do nothing\nend",
-            "ParseTree"    => s(:defs, s(:self), :empty, s(:args)))
+            "ParseTree"    => s(:defs, s(:self), :empty, s(:args), s(:nil)))
 
   add_tests("defs_empty_args",
             "Ruby"         => "def self.empty(*)\n  # do nothing\nend",
             "ParseTree"    => s(:defs, s(:self), :empty,
-                                s(:args, :*)))
+                                s(:args, :*),
+                                s(:nil)))
 
   add_tests("defs_expr_wtf",
             "Ruby"         => "def (a.b).empty(*)\n  # do nothing\nend",
             "ParseTree"    => s(:defs,
                                 s(:call, s(:call, nil, :a), :b),
                                 :empty,
-                                s(:args, :*)))
+                                s(:args, :*),
+                                s(:nil)))
 
   add_tests("dmethod",
             "Ruby"         => [Examples, :dmethod_added],
