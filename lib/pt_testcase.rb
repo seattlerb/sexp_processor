@@ -76,7 +76,7 @@ class ParseTreeTestCase < Minitest::Test
   end
 
   def self.add_19tests name, hash
-    add_tests "#{name}__19_20_21_22", hash # HACK?
+    add_tests "#{name}__19_20_21_22_23", hash # HACK?
   end
 
   def self.add_19edgecases ruby, sexp, cases
