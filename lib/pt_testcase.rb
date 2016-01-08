@@ -101,7 +101,7 @@ class ParseTreeTestCase < Minitest::Test
     testcases[verbose][klass] = testcases[nonverbose][klass]
   end
 
-  VER_RE = "(1[89]|2[012])"
+  VER_RE = "(1[89]|2[0123])"
 
   def self.generate_test klass, node, data, input_name, output_name
     klass.send :define_method, "test_#{node}" do
