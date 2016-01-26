@@ -49,6 +49,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
     @processor = SexpProcessor.new
     @sexp = @sexp_class.new(1, 2, 3)
     @basic_sexp = s(:lasgn, :var, s(:lit, 42))
+    @complex_sexp = s(:block, s(:lasgn, :foo, s(:str, "foo")), s(:if, s(:and, s(:true), s(:lit, 1)), s(:if, s(:lvar, :foo), s(:str, "bar"), nil), s(:true)))
     @re = s(:lit, 42)
     @bad1 = s(:lit, 24)
     @bad1 = s(:blah, 42)
@@ -309,6 +310,28 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_to_s
     test_inspect
+  end
+
+  def test_each_sexp
+    result = []
+    @basic_sexp.each_sexp { |_, val| result << val }
+    assert_equal [42], result
+  end
+
+  def test_each_sexp_without_block
+    assert_kind_of Enumerator, @basic_sexp.each_sexp
+    assert_equal [42], @basic_sexp.each_sexp.map { |_, n| n }
+  end
+
+  def test_deep_each
+    result = []
+    @complex_sexp.deep_each { |s| result << s if s.first == :if }
+    assert_equal [:if, :if], result.map { |k, _| k }
+  end
+
+  def test_deep_each_without_block
+    assert_kind_of Enumerator, @complex_sexp.deep_each
+    assert_equal [:if, :if], @complex_sexp.deep_each.select { |s, _| s == :if }.map { |k, _| k }
   end
 end
 

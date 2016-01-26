@@ -85,9 +85,10 @@ class Sexp < Array # ZenTest FULL
 
   ##
   # Recursively enumerates the sexp yielding to +block+ for every element.
-  # TODO: test
 
   def deep_each(&block)
+    return enum_for(:deep_each) unless block_given?
+
     self.each_sexp do |sexp|
       block[sexp]
       sexp.deep_each(&block)
@@ -98,6 +99,8 @@ class Sexp < Array # ZenTest FULL
   # Enumeratates the sexp yielding to +b+ when the node_type == +t+.
 
   def each_of_type(t, &b)
+    return enum_for(:each_of_type) unless block_given?
+
     each do | elem |
       if Sexp === elem then
         elem.each_of_type(t, &b)
@@ -108,9 +111,10 @@ class Sexp < Array # ZenTest FULL
 
   ##
   # Recursively enumerates all sub-sexps skipping non-Sexp elements.
-  # TODO: test
 
   def each_sexp
+    return enum_for(:each_sexp) unless block_given?
+
     self.each do |sexp|
       next unless Sexp === sexp
 
