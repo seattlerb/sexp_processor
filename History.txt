@@ -1,3 +1,10 @@
+=== 4.7.0 / 2016-02-18
+
+* 2 minor enhancements:
+
+  * Expand to support 2.3 in tests. (presidentbeef)
+  * Return enumerable for deep_each, each_sexp, and each_of_type. (ridiculous)
+
 === 4.6.1 / 2016-01-21
 
 * 1 bug fix:
