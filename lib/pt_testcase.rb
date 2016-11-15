@@ -2,7 +2,7 @@
 
 $TESTING = true
 
-require 'minitest/unit'
+require 'minitest/test'
 require 'sexp_processor' # for deep_clone
 
 # key:
