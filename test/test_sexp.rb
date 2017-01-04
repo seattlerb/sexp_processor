@@ -193,6 +193,12 @@ class TestSexp < SexpTestCase # ZenTest FULL
                  k.new(:a, k.new(:b)).inspect)
   end
 
+  def test_inspect_recursive
+      a = s(:a)
+      a << a
+      assert_equal("s(:a, s(...))", a.inspect)
+  end
+
   def test_mass
     assert_equal 1, s(:a).mass
     assert_equal 3, s(:a, s(:b), s(:c)).mass
