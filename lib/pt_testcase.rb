@@ -1000,6 +1000,11 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "o.puts(42)",
             "ParseTree"    => s(:call, s(:call, nil, :o), :puts, s(:lit, 42)))
 
+  add_tests("ternary_nil_no_space",
+            "Ruby"         => "1 ? nil: 1",
+            "RawParseTree" => [:if, [:lit, 1], [:nil], [:lit, 1]],
+            "ParseTree"    => s(:if, s(:lit, 1), s(:nil), s(:lit, 1)))
+
   add_tests("call_arglist_hash",
             "Ruby"         => "o.m(:a => 1, :b => 2)",
             "ParseTree"    => s(:call,
