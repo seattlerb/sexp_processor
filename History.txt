@@ -1,3 +1,10 @@
+=== 4.8.0 / 2017-02-01
+
+* 2 minor enhancements:
+
+  * Added Sexp#line_max
+  * Extended MethodBasedSexpProcessor#in_method to take line_max and record span.
+
 === 4.7.0 / 2016-02-18
 
 * 2 minor enhancements:
