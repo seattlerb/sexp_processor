@@ -48,8 +48,15 @@ class TestSexp < SexpTestCase # ZenTest FULL
     @sexp_class = Object.const_get(self.class.name[4..-1])
     @processor = SexpProcessor.new
     @sexp = @sexp_class.new(1, 2, 3)
-    @basic_sexp = s(:lasgn, :var, s(:lit, 42))
-    @complex_sexp = s(:block, s(:lasgn, :foo, s(:str, "foo")), s(:if, s(:and, s(:true), s(:lit, 1)), s(:if, s(:lvar, :foo), s(:str, "bar"), nil), s(:true)))
+    @basic_sexp = s(:lasgn, :var, s(:lit, 42).line(1)).line(1)
+    @complex_sexp = s(:block,
+                      s(:lasgn, :foo, s(:str, "foo").line(1)).line(1),
+                      s(:if, s(:and, s(:true).line(2), s(:lit, 1).line(2)).line(2),
+                        s(:if, s(:lvar, :foo).line(3),
+                          s(:str, "bar").line(3),
+                          nil).line(3),
+                        s(:true).line(5)).line(2)).line(1)
+
     @re = s(:lit, 42)
     @bad1 = s(:lit, 24)
     @bad1 = s(:blah, 42)
@@ -191,6 +198,18 @@ class TestSexp < SexpTestCase # ZenTest FULL
                  k.new(:a, :b).inspect)
     assert_equal("#{n}(:a, #{n}(:b))",
                  k.new(:a, k.new(:b)).inspect)
+  end
+
+  def test_line
+    assert_nil @sexp.line
+    assert_equal 1, @basic_sexp.line
+    assert_equal 1, @complex_sexp.line
+  end
+
+  def test_line_max
+    assert_nil @sexp.line_max
+    assert_equal 1, @basic_sexp.line_max
+    assert_equal 5, @complex_sexp.line_max
   end
 
   def test_mass

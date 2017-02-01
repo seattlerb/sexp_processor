@@ -327,6 +327,19 @@ class TestMethodBasedSexpProcessor < Minitest::Test
     assert_equal expected, processor.method_locations
   end
 
+  def test_in_method_line_max
+    assert_empty processor.method_stack
+
+    processor.in_method "xxx", "file.rb", 42, 44 do
+      assert_equal ["xxx"], processor.method_stack
+    end
+
+    assert_empty processor.method_stack
+
+    expected = {"main#xxx" => "file.rb:42-44"}
+    assert_equal expected, processor.method_locations
+  end
+
   def test_klass_name
     assert_equal :main, processor.klass_name
 

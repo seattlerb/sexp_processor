@@ -200,6 +200,13 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
+  # Returns the maximum line number of the children of self.
+
+  def line_max
+    self.deep_each.map(&:line).max
+  end
+
+  ##
   # Returns the size of the sexp, flattened.
 
   def mass
