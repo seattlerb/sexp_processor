@@ -203,7 +203,7 @@ class Sexp < Array # ZenTest FULL
   # Returns the maximum line number of the children of self.
 
   def line_max
-    self.deep_each.map(&:line).max
+    @line_max ||= self.deep_each.map(&:line).max
   end
 
   ##
@@ -217,6 +217,7 @@ class Sexp < Array # ZenTest FULL
   # Returns the node named +node+, deleting it if +delete+ is true.
 
   def method_missing meth, delete = false
+    warn "Sexp#method_missing(%p) from %s" % [meth, caller.first] if ENV["DEBUG"]
     find_node meth, delete
   end
 
