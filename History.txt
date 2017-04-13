@@ -1,3 +1,17 @@
+=== 4.9.0 / 2017-04-13
+
+* 9 minor enhancements:
+
+  * Added Sexp.depth
+  * Added Sexp.sexp_type=
+  * Cache Sexp.line_max. Massively speeds up large flay runs.
+  * Cleaned up SexpProcessor.process handling of result node type.
+  * Extend pt_testcase for ruby 2.4 tests.
+  * Extended Sexp.method_missing to only print on every invocation if $VERBOSE=1
+  * Extended Sexp.method_missing to warn if the expected sub-sexp is not found.
+  * Rewrote Sexp.mass to be MUCH faster. Helps tremendously with flay on large files.
+  * Warn that Sexp#method_missing was tripped if $DEBUG.
+
 === 4.8.0 / 2017-02-01
 
 * 2 minor enhancements:
