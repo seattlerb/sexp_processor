@@ -278,12 +278,7 @@ class SexpProcessor
 
           # NOTE: this is costly, but we are in the generic processor
           # so we shouldn't hit it too much with RubyToC stuff at least.
-          #if Sexp === exp and not exp.sexp_type.nil? then
-          begin
-            result.sexp_type = exp.sexp_type
-          rescue Exception
-            # nothing to do, on purpose
-          end
+          result.sexp_type = exp.sexp_type if Sexp === exp and exp.sexp_type
         else
           msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
           msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG

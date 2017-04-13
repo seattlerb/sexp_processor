@@ -228,8 +228,15 @@ class Sexp < Array # ZenTest FULL
   # Returns the node named +node+, deleting it if +delete+ is true.
 
   def method_missing meth, delete = false
-    warn "Sexp#method_missing(%p) from %s" % [meth, caller.first] if ENV["DEBUG"]
-    find_node meth, delete
+    r = find_node meth, delete
+    if ENV["DEBUG"] then
+      if r.nil? then
+        warn "%p.method_missing(%p) => nil from %s" % [self, meth, caller.first]
+      elsif ENV["VERBOSE"]
+        warn "%p.method_missing(%p) from %s" % [self, meth, caller.first]
+      end
+    end
+    r
   end
 
   def respond_to? msg, private = false # :nodoc:
@@ -251,6 +258,13 @@ class Sexp < Array # ZenTest FULL
 
   def sexp_type
     first
+  end
+
+  ##
+  # Sets the node type of the Sexp.
+
+  def sexp_type= v
+    self[0] = v
   end
 
   ##
