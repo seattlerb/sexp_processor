@@ -95,6 +95,10 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  def depth
+    1 + (each_sexp.map(&:depth).max || 0)
+  end
+
   ##
   # Enumeratates the sexp yielding to +b+ when the node_type == +t+.
 
@@ -210,7 +214,14 @@ class Sexp < Array # ZenTest FULL
   # Returns the size of the sexp, flattened.
 
   def mass
-    @mass ||= self.structure.flatten.size
+    @mass ||=
+      inject(1) { |t, s|
+      if Sexp === s then
+        t + s.mass
+      else
+        t
+      end
+    }
   end
 
   ##

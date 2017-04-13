@@ -1,9 +1,23 @@
 $TESTING = true
 
 require 'minitest/autorun'
+require "minitest/benchmark" if ENV["BENCH"]
 require 'sexp_processor'
 require 'stringio'
 require 'pp'
+
+def pyramid_sexp max
+  # s(:array,
+  #   s(:array, s(:s, 1)),
+  #   s(:array, s(:s, 1), s(:s, 2)),
+  #   ...
+  #   s(:array, s(:s, 1), s(:s, 2), ... s(:s, max-1)))
+
+  s(:array,
+    *(1...max).map { |n|
+      s(:array, *(1..n).map { |m|
+          s(:s, m) })})
+end
 
 class SexpTestCase < Minitest::Test
   # KEY for regex tests
@@ -235,6 +249,15 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal 7, s.mass
   end
 
+  def test_mass_huge
+    max = 100
+    sexp = pyramid_sexp max
+
+    exp = (max*max + max)/2 # pyramid number 1+2+3+...+m
+
+    assert_equal exp, sexp.mass
+  end
+
   def test_method_missing
     assert_nil @sexp.not_there
     assert_equal s(:lit, 42), @basic_sexp.lit
@@ -342,6 +365,13 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal [42], @basic_sexp.each_sexp.map { |_, n| n }
   end
 
+  def test_depth
+    assert_equal 1, s(:a).depth
+    assert_equal 2, s(:a, s(:b)).depth
+    assert_equal 3, s(:a, s(:b1, s(:c)), s(:b2)).depth
+    assert_equal 5, s(:a, s(:b, s(:c, s(:d, s(:e))))).depth
+  end
+
   def test_deep_each
     result = []
     @complex_sexp.deep_each { |s| result << s if s.first == :if }
@@ -373,3 +403,30 @@ class TestSexpAny < SexpTestCase
   end
 
 end
+
+class BenchSexp < Minitest::Benchmark
+  def run
+    GC.disable
+    super
+  ensure
+    GC.enable
+  end
+
+  def self.bench_range
+    bench_linear 100, 500, 50
+  end
+
+  @@data = Hash[bench_range.map { |n| [n, pyramid_sexp(n)] }]
+
+  def bench_pyramid
+    assert_performance_power do |max|
+      pyramid_sexp max
+    end
+  end
+
+  def bench_mass
+    assert_performance_power do |max|
+      @@data[max].mass
+    end
+  end
+end if ENV["BENCH"]
