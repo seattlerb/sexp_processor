@@ -13,7 +13,7 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
   end
 
   def default_processor(exp)
-    result = []
+    result = s()
     result << exp.shift
     until exp.empty? do
       result << exp.shift.to_s + " woot"
@@ -29,20 +29,20 @@ class TestCompositeSexpProcessor < Minitest::Test
   end
 
   def test_process_default
-    data = [1, 2, 3]
+    data = s(1, 2, 3)
     result = @p.process(data.dup)
     assert_equal(data.dup, result)
   end
 
   def test_process_fake1
-    data = [:x, 1, 2, 3]
+    data = s(:x, 1, 2, 3)
     @p << FakeProcessor1.new
     result = @p.process(data.dup)
     assert_equal [:x, "1 woot", "2 woot", "3 woot"], result
   end
 
   def test_process_fake1_twice
-    data = [:x, 1, 2, 3]
+    data = s(:x, 1, 2, 3)
     @p << FakeProcessor1.new
     @p << FakeProcessor1.new
     result = @p.process(data.dup)
