@@ -169,7 +169,7 @@ class SexpProcessor
   end
 
   def rewrite(exp)
-    type = exp.first
+    type = exp.sexp_type
 
     if @debug.has_key? type then
       str = exp.inspect
@@ -190,7 +190,7 @@ class SexpProcessor
         puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
       end
 
-      old_type, type = type, exp.first
+      old_type, type = type, exp.sexp_type
     end until old_type == type
 
     exp
@@ -220,7 +220,7 @@ class SexpProcessor
 
     result = self.expected.new
 
-    type = exp.first
+    type = exp.sexp_type
     raise "type should be a Symbol, not: #{exp.first.inspect}" unless
       Symbol === type
 
@@ -458,7 +458,7 @@ class MethodBasedSexpProcessor < SexpProcessor
 
   def in_klass name
     if Sexp === name then
-      name = case name.first
+      name = case name.sexp_type
              when :colon2 then
                name = name.flatten
                name.delete :const

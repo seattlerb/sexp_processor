@@ -176,8 +176,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_find_and_replace_all
-    @sexp    = s(:a, s(:b, s(:a), s(:b), s(:b, s(:a))))
-    expected = s(:a, s(:a, s(:a), s(:a), s(:a, s(:a))))
+    @sexp    = s(:a, s(:a, :b, s(:a, :b), s(:a), :b, s(:a, s(:a))))
+    expected = s(:a, s(:a, :a, s(:a, :a), s(:a), :a, s(:a, s(:a))))
 
     @sexp.find_and_replace_all(:b, :a)
 
@@ -374,7 +374,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_deep_each
     result = []
-    @complex_sexp.deep_each { |s| result << s if s.first == :if }
+    @complex_sexp.deep_each { |s| result << s if s.sexp_type == :if }
     assert_equal [:if, :if], result.map { |k, _| k }
   end
 

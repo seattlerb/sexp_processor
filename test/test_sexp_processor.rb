@@ -17,7 +17,7 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_acc2(exp)
-    out = []
+    out = s()
     out << exp.thing_one
   end
 
@@ -122,7 +122,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.warn_on_default = false
 
     assert_raises SexpTypeError do
-      @processor.process([:broken, 1, 2, 3])
+      @processor.process(s(:broken, 1, 2, 3))
     end
   end
 
@@ -269,7 +269,7 @@ class TestSexpProcessor < Minitest::Test
   def test_expected
     assert_equal Sexp, @processor.expected
     assert_raises SexpTypeError do
-      @processor.process([:expected])           # should raise
+      @processor.process(s(:expected))           # should raise
     end
 
     @processor.process(s(:str, "string"))       # shouldn't raise
