@@ -7,7 +7,6 @@ $TESTING ||= false # unless defined $TESTING
 # dispatch the Sexp to for processing.
 
 class Sexp < Array # ZenTest FULL
-
   attr_writer :line
   attr_accessor :file, :comments
 
@@ -144,6 +143,7 @@ class Sexp < Array # ZenTest FULL
   # Replaces all Sexps matching +pattern+ with Sexp +repl+.
 
   def gsub(pattern, repl)
+    # TODO: retest and rewrite for new patterns
     return repl if pattern == self
 
     new = self.map do |subset|
@@ -159,7 +159,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def inspect # :nodoc:
-    sexp_str = self.map {|x|x.inspect}.join(', ')
+    sexp_str = self.map(&:inspect).join ", "
     if ENV['VERBOSE'] && line then
       "s(#{sexp_str}).line(#{line})"
     else

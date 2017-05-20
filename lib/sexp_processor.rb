@@ -203,6 +203,11 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
+
+    unless Sexp === exp then
+      raise SexpTypeError, "exp must be a Sexp, was #{exp.class}:#{exp.inspect}"
+    end
+
     if self.context.empty? then
       p :rewriting unless debug.empty?
       exp = self.rewrite(exp)
@@ -278,7 +283,7 @@ class SexpProcessor
 
           # NOTE: this is costly, but we are in the generic processor
           # so we shouldn't hit it too much with RubyToC stuff at least.
-          result.sexp_type = exp.sexp_type if Sexp === exp and exp.sexp_type
+          result.c_type ||= exp.c_type if Sexp === exp and exp.c_type
         else
           msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
           msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG

@@ -1,8 +1,15 @@
 $TESTING = true
 
+if ENV["COV"]
+  require "simplecov"
+  SimpleCov.start # "rails"
+  warn "Running simplecov"
+end
+
 require 'minitest/autorun'
 require "minitest/benchmark" if ENV["BENCH"]
 require 'sexp_processor'
+require "sexp"
 require 'stringio'
 require 'pp'
 
@@ -50,11 +57,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
     end
   end
 
-  def util_pretty_print(expect, input)
-    io = StringIO.new
-    PP.pp(input, io)
-    io.rewind
-    assert_equal(expect, io.read.chomp)
+  def assert_pretty_print expect, input
+    assert_equal expect, input.pretty_inspect.chomp
   end
 
   def setup
@@ -283,14 +287,14 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_pretty_print
-    util_pretty_print("s()",
-                       s())
-    util_pretty_print("s(:a)",
-                       s(:a))
-    util_pretty_print("s(:a, :b)",
-                       s(:a, :b))
-    util_pretty_print("s(:a, s(:b))",
-                       s(:a, s(:b)))
+    assert_pretty_print("s()",
+                        s())
+    assert_pretty_print("s(:a)",
+                        s(:a))
+    assert_pretty_print("s(:a, :b)",
+                        s(:a, :b))
+    assert_pretty_print("s(:a, s(:b))",
+                        s(:a, s(:b)))
   end
 
   def test_sexp_body
