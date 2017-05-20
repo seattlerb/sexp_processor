@@ -72,7 +72,7 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def rewrite_major_rewrite(exp)
-    exp[0] = :rewritable
+    exp.sexp_type = :rewritable
     exp
   end
 end
@@ -98,13 +98,13 @@ class TestSexpProcessor < Minitest::Test
   end
 
   def test_process_specific
-    a = [:specific, [:x, 1], [:y, 2], [:z, 3]]
-    expected = [:blah, [:x, 1], [:y, 2], [:z, 3]]
+    a = s(:specific, s(:x, 1), s(:y, 2), s(:z, 3))
+    expected = s(:blah, s(:x, 1), s(:y, 2), s(:z, 3))
     assert_equal(expected, @processor.process(a))
   end
 
   def test_process_generic
-    a = [:blah, 1, 2, 3]
+    a = s(:blah, 1, 2, 3)
     expected = a.deep_clone
     assert_equal(expected, @processor.process(a))
   end
@@ -131,7 +131,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.unsupported << :strip
 
     assert_raises UnsupportedNodeError do
-      @processor.process([:whatever])
+      @processor.process(s(:whatever))
     end
   end
 
@@ -139,14 +139,14 @@ class TestSexpProcessor < Minitest::Test
     @processor.strict = true
     @processor.unsupported = [ :unsupported ]
     assert_raises UnsupportedNodeError do
-      @processor.process([:unsupported, 42])
+      @processor.process(s(:unsupported, 42))
     end
   end
 
   def test_strict
     @processor.strict = true
     assert_raises UnknownNodeError do
-      @processor.process([:blah, 1, 2, 3])
+      @processor.process(s(:blah, 1, 2, 3))
     end
   end
   def test_strict=; skip; end #Handled
@@ -154,12 +154,12 @@ class TestSexpProcessor < Minitest::Test
   def test_require_empty_false
     @processor.require_empty = false
 
-    assert_equal s(:nonempty, 1, 2, 3), @processor.process([:nonempty, 1, 2, 3])
+    assert_equal s(:nonempty, 1, 2, 3), @processor.process(s(:nonempty, 1, 2, 3))
   end
 
   def test_require_empty_true
     assert_raises NotEmptyError do
-      @processor.process([:nonempty, 1, 2, 3])
+      @processor.process(s(:nonempty, 1, 2, 3))
     end
   end
   def test_require_empty=; skip; end # handled
@@ -282,7 +282,7 @@ class TestSexpProcessor < Minitest::Test
       @processor.process(s(:string, "string"))     # should raise
     end
 
-    @processor.process([:expected])        # shouldn't raise
+    @processor.process(s(:expected))        # shouldn't raise
   end
   def test_expected=; skip; end # handled
 
