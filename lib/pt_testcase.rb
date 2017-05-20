@@ -136,9 +136,9 @@ class ParseTreeTestCase < Minitest::Test
         extra_input = []
 
         _, expected, extra_expected = *expected if
-          Array === expected and expected.first == :defx
+          Array === expected and expected.sexp_type == :defx
         _, input, extra_input = *input if
-          Array === input and input.first == :defx
+          Array === input and input.sexp_type == :defx
 
         # OMG... I can't believe I have to do this this way.  these
         # hooks are here instead of refactoring this define_method
@@ -747,13 +747,6 @@ class ParseTreeTestCase < Minitest::Test
                                 s(:attrasgn, s(:lvar, :a), :[]=,
                                   s(:lit, 42), s(:lit, 24))),
             "Ruby2Ruby"    => "a = []\na[42] = 24\n")
-
-  add_tests("attrset",
-            "Ruby"         => [Examples, :writer=],
-            "ParseTree"    => s(:defn, :writer=,
-                                s(:args, :arg),
-                                s(:attrset, :@writer)),
-            "Ruby2Ruby"    => "attr_writer :writer")
 
   add_tests("back_ref",
             "Ruby"         => "[$&, $`, $', $+]",
