@@ -283,7 +283,7 @@ class SexpProcessor
 
           # NOTE: this is costly, but we are in the generic processor
           # so we shouldn't hit it too much with RubyToC stuff at least.
-          result.c_type ||= exp.c_type if Sexp === exp and exp.c_type
+          result.c_type ||= exp.c_type if Sexp === exp and exp.respond_to?(:c_type)
         else
           msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
           msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG
