@@ -15,12 +15,31 @@
 # 3 = sexp.node_name  => no (ie, method_missing)
 # 4 = sexp.replace x  => no
 # 4 = sexp.concat x   => no
+# 4 = sexp.collect!   => no
+# 4 = sexp.compact!   => no
+# 4 = sexp.flatten!   => no
+# 4 = sexp.map!       => no
+# 4 = sexp.reject!    => no
+# 4 = sexp.reverse!   => no
+# 4 = sexp.rotate!    => no
+# 4 = sexp.select!    => no
+# 4 = sexp.shuffle!   => no
+# 4 = sexp.slice!     => no
+# 4 = sexp.sort!      => no
+# 4 = sexp.sort_by!   => no
+# 4 = sexp.uniq!      => no
 
 class Sexp
   alias :safe_idx   :[]
   alias :safe_asgn  :[]=
   alias :sexp_type= :sexp_type=
   alias :sexp_body= :sexp_body=
+
+  def self.nuke_method name, level
+    define_method name do |*args|
+      raise "no: %p.%s %p" % [self, name, args]
+    end if __strict >= level
+  end
 
   def self.__strict
     ENV["STRICT_SEXP"].to_i
@@ -57,13 +76,21 @@ class Sexp
     raise "use sexp_type"
   end
 
-  def replace o
-    raise "no: %p.replace %p" % [self, o]
-  end if __strict > 3
-
-  def concat o
-    raise "no: %p.concat %p" % [self, o]
-  end if __strict > 3
+  nuke_method :replace,  4
+  nuke_method :concat,   4
+  nuke_method :collect!, 4
+  nuke_method :compact!, 4
+  nuke_method :flatten!, 4
+  nuke_method :map!,     4
+  nuke_method :reject!,  4
+  nuke_method :reverse!, 4
+  nuke_method :rotate!,  4
+  nuke_method :select!,  4
+  nuke_method :shuffle!, 4
+  nuke_method :slice!,   4
+  nuke_method :sort!,    4
+  nuke_method :sort_by!, 4
+  nuke_method :uniq!,    4
 
   def sexp_type
     safe_idx 0

@@ -1,5 +1,14 @@
 $TESTING = true
 
+if ENV["COV"]
+  require "simplecov"
+  SimpleCov.start do
+    add_filter "lib/sexp.rb"
+    add_filter "test"
+  end
+  warn "Running simplecov"
+end
+
 require 'sexp_processor'
 require 'stringio'
 require 'minitest/autorun'

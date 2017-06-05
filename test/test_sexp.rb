@@ -117,8 +117,6 @@ class MatcherTestCase < SexpTestCase
 
   def test_satisfy_eh
     assert_equal3 matcher, sexp
-    exp = {}
-    assert_equal exp, matcher === sexp
   end
 
   def test_satisfy_eh_fail
@@ -394,6 +392,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing
+    skip_if_strict 3
+
     capture_io do
       assert_nil @sexp.not_there
       assert_equal s(:lit, 42), @basic_sexp.lit
@@ -401,13 +401,17 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing_missing
+    skip_if_strict 3
     skip "debugging for now" if ENV["DEBUG"]
+
     assert_silent do
       assert_nil @basic_sexp.missing
     end
   end
 
   def test_method_missing_missing_debug
+    skip_if_strict 3
+
     exp = /#{Regexp.escape @basic_sexp.to_s}.method_missing\(:missing\) => nil from/
 
     with_debug do
@@ -418,6 +422,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing_hit_debug_verbose
+    skip_if_strict 3
+
     with_debug do
       with_verbose do
         exp = /#{Regexp.escape @basic_sexp.to_s}.method_missing\(:lit\) from/
@@ -430,6 +436,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing_ambigious
+    skip_if_strict 3
+
     assert_raises NoMethodError do
       pirate = s(:says, s(:arrr!), s(:arrr!), s(:arrr!))
       pirate.arrr!
@@ -437,15 +445,23 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing_deep
-    sexp = s(:blah, s(:a, s(:b, s(:c, :yay!))))
-    assert_equal(s(:c, :yay!), sexp.a.b.c)
+    skip_if_strict 3
+
+    capture_io do
+      sexp = s(:blah, s(:a, s(:b, s(:c, :yay!))))
+      assert_equal(s(:c, :yay!), sexp.a.b.c)
+    end
   end
 
   def test_method_missing_delete
+    skip_if_strict 3
+
     sexp = s(:blah, s(:a, s(:b, s(:c, :yay!))))
 
-    assert_equal(s(:c, :yay!), sexp.a.b.c(true))
-    assert_equal(s(:blah, s(:a, s(:b))), sexp)
+    capture_io do
+      assert_equal(s(:c, :yay!), sexp.a.b.c(true))
+      assert_equal(s(:blah, s(:a, s(:b))), sexp)
+    end
   end
 
   def test_pretty_print
@@ -840,9 +856,7 @@ class TestChild < MatcherTestCase
   end
 
   def test_satisfy_eh_by_child
-    res = matcher.satisfy? s(:a)
-    exp = {}
-    assert_equal exp, res
+    assert_satisfy matcher, s(:a)
   end
 end
 
@@ -1001,9 +1015,9 @@ class TestMatchResult < SexpTestCase
   end
 
   def test_index
-    self.act = (s(:a, :b, :c) / s{ _  % :key }).first
+    self.act = (s(:a, :b, :c) / s{ _ }).first
 
-    assert_equal sexp, act[:key]
+    assert_equal sexp, act.sexp
   end
 
   def test_index_eq
@@ -1129,11 +1143,12 @@ class TestSexpSearch < SexpTestCase
   end
 
   def test_slash_data
-    pat = s{ s(:defn, m(/^test_.+/) % :name, ___ ) }
+    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
 
-    exp = [{ :name=>:test_a }, { :name=>:test_b }, { :name=>:test_a }]
+    _, _, (_klass, _, _, _setup, t1, t2, t3) = TestUseCase.sexp.deep_clone
+    exp = [t1, t2, t3]
 
-    assert_equal exp, (TestUseCase.sexp.deep_clone / pat).map(&:data)
+    assert_equal exp, (TestUseCase.sexp.deep_clone / pat).map(&:sexp)
   end
 
   def test_search_each_no_block
@@ -1166,27 +1181,18 @@ class TestSexpSearch < SexpTestCase
 
   def test_satisfy_eh_any_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    res = s{ any(s(:add, :a, :b), s(:sub, :a, :b)) % :match }.satisfy? sexp
-    assert res
-    assert_equal sexp, res[:match]
+    assert_satisfy s{ any(s(:add, :a, :b), s(:sub, :a, :b)) }, sexp
 
-    res = s{ any(s(atom % :name, :a, :b), s(:sub, :a, :b)) % :match }.satisfy?( sexp )
-    assert res
-    assert_equal sexp, res[:match]
-    assert_equal :add, res[:name]
+    assert_satisfy s{ any(s(atom, :a, :b), s(:sub, :a, :b)) }, sexp
   end
 
   def test_satisfy_eh_all_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    res = s{ all(s(_, :a, :b), s(atom, :a, :b)) % :match }.satisfy? sexp
-    assert res
-    assert_equal sexp, res[:match]
+    assert_satisfy s{ all(s(_, :a, :b), s(atom, :a, :b)) }, sexp
 
-    res = s{ all(s(_ % :wild, :a, :b), s(atom % :atom, :a, :b)) % :match }.satisfy? sexp
-    assert res
-    assert_equal sexp, res[:match]
-    assert_equal :add, res[:wild]
-    assert_equal :add, res[:atom]
+    assert_satisfy s{ all(s(_, :a, :b), s(atom, :a, :b)) }, sexp
+
+    assert_search 1, sexp, s{ all(s(_, :a, :b), s(atom, :a, :b)) }
   end
 end
 
@@ -1199,55 +1205,6 @@ class TestSexpPath < Minitest::Test
     assert_instance_of Sexp::Matcher, s{ s(:a, atom, :c) }
   end
 end
-
-class TestCapture < SexpTestCase
-  def test_satisfy_eh_no_capture
-    sexp = s(:a, :b, :c)
-    assert_satisfy s{ s(:a, :b, :c) }, sexp.dup
-    assert_equal Hash.new, s{ s(:a, :b, :c) }.satisfy?(sexp.dup)
-  end
-
-  def test_satisfy_eh_named_capture
-    sexp = s(:a, :b, :c)
-    act = s{ s(:a, :b, :c) % "cake" }.satisfy? sexp.dup
-    exp = { "cake" => sexp.dup }
-
-    assert_equal exp, act
-  end
-
-  def test_satisfy_eh_multiple_named_capture
-    act = s{ s(:add, atom % :A, atom % :B) }.satisfy?( s(:add, :a, :b) )
-
-    assert_equal :a, act[:A]
-    assert_equal :b, act[:B]
-  end
-
-  def ast_sexp
-    s(:class, :cake, nil,
-      s(:defn, :foo, s(:args), s(:add, :a, :b)),
-      s(:defn, :bar, s(:args), s(:sub, :a, :b)))
-  end
-
-  def test_deep_matches
-    assert act = s{ s(:class, atom % "name", _, _ % "def1", _ % "def2") }.satisfy?( ast_sexp )
-    assert_equal(:cake, act["name"])
-    assert_equal(s(:defn, :foo, s(:args), s(:add, :a, :b)), act["def1"])
-    assert_equal(s(:defn, :bar, s(:args), s(:sub, :a, :b)), act["def2"])
-  end
-
-  def test_satisfy_eh_bad_type
-    refute_operator s{ s(:a, :b, :c) }, :satisfy?, 42
-  end
-
-  def test_satisfy_eh_bad_length
-    refute_operator s{ s(:a, :b, :c) }, :satisfy?, s(:a, :b) # mismatched length
-  end
-
-  def test_satisfy_eh_bad_non_greedy
-    refute_operator s{ s(:a, :b, s(:c)) }, :satisfy?, s(:a, :b, :c) # not greedy
-    refute_operator s{ s(:a,     s(:c)) }, :satisfy?, s(:a, :b, :c) # not greedy
-  end
-end # class TestSexp
 
 class TestSexpReplaceSexp < SexpTestCase
   def test_replace_sexp
@@ -1267,9 +1224,9 @@ class TestSexpReplaceSexp < SexpTestCase
   def test_replace_sexp_yields_match_result
     sexp = s(:a, s(:b), :c)
 
-    exp = M::MatchResult.new(sexp, :type => sexp)
+    exp = M::MatchResult.new(sexp)
 
-    sexp.replace_sexp(s{ t(:a) % :type }) { |x|
+    sexp.replace_sexp(s{ t(:a) }) { |x|
       assert_equal exp, x
     }
   end
@@ -1285,9 +1242,9 @@ class TestSexpReplaceSexp < SexpTestCase
   def test_search_each_yields_match_result
     sexp = s(:a, s(:b), :c)
 
-    exp = M::MatchResult.new(sexp, :type => sexp)
+    exp = M::MatchResult.new(sexp)
 
-    sexp.search_each(s{ t(:a) % :type }) { |x|
+    sexp.search_each(s{ t(:a) }) { |x|
       assert_equal exp, x
     }
   end
@@ -1308,7 +1265,7 @@ end
 # 1. Make sure it works
 # 2. Make sure it's not painful to use
 
-class TestUseCase < Minitest::Test
+class TestUseCase < SexpTestCase
   @@sexp = eval File.read(__FILE__).split(/^__END__/).last
 
   def self.sexp
@@ -1325,28 +1282,33 @@ class TestUseCase < Minitest::Test
   end
 
   def test_finding_classes_and_methods
-    res = @sexp / s{ s(:class, atom % "name", ___ ) }
+    res = @sexp / s{ s(:class, atom, ___ ) }
+
+    _klass, name, * = res.first.sexp
+
     assert_equal 1, res.length
-    assert_equal :ExampleTest, res.first["name"]
+    assert_equal :ExampleTest, name
 
     methods = res / s{ t(:defn) }
     assert_equal 5, methods.length
   end
 
   def test_finding_empty_test_methods
-    empty_test = s{ s(:defn, m(/^test_.+/) % :name, s(:args), s(:nil)) }
+    empty_test = s{ s(:defn, m(/^test_.+/), s(:args), s(:nil)) }
     res = @sexp / empty_test
 
-    assert_equal 1, res.length
-    assert_equal :test_b, res.first[:name]
+    _, _, (_klass, _, _, _setup, _t1, t2, _t3) = TestUseCase.sexp.deep_clone
+
+    assert_equal [t2], res.map(&:sexp)
   end
 
   def test_search_each_finding_duplicate_test_names
-    pat = s{ s(:defn, m(/^test_.+/) % :name, ___ ) }
+    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
     counts = Hash.new { |h, k| h[k] = 0 }
 
     @sexp.search_each pat do |x|
-      counts[x[:name]] += 1
+      _, name, * = x.sexp
+      counts[name] += 1
     end
 
     assert_equal 1, counts[:test_b], "Should have seen test_b once"
@@ -1354,17 +1316,18 @@ class TestUseCase < Minitest::Test
   end
 
   def test_finding_duplicate_test_names_via_res
-    pat = s{ s(:defn, m(/^test_.+/) % :name, ___ ) }
+    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
     res = @sexp / pat
     counts = Hash.new { |h, k| h[k] = 0 }
 
-    exp = [{ :name=>:test_a }, { :name=>:test_b }, { :name=>:test_a }]
+    _, _, (_klass, _, _, _setup, t1, t2, t3) = TestUseCase.sexp.deep_clone
+    exp = [t1, t2, t3]
 
-    assert_equal exp, res.map(&:data)
+    assert_equal exp, res.map(&:sexp)
 
     res.each do |m|
-      method_name = m[:name]
-      counts[method_name] += 1
+      _, name, *_ = m.sexp
+      counts[name] += 1
     end
 
     assert_equal 1, counts[:test_b], "Should have seen test_b once"
@@ -1372,19 +1335,7 @@ class TestUseCase < Minitest::Test
   end
 
   def test_rewriting_colon2s
-    colon2 = s{ s(:colon2, s(:const, atom % "const"), atom % "scope") }
-
-    (@sexp / colon2).each do |result|
-      name = result.values_at("const", "scope").join("::")
-      result.sexp.replace s(:const, name)
-    end
-
-    expected_sexp = s{ s(:const, "Minitest::Test") }
-    assert_equal 1, (@sexp / expected_sexp).length, @sexp.inspect
-  end
-
-  def test_rewriting_colon2s_again
-    colon2   = s{ s(:colon2, s(:const, atom % "const"), atom % "scope") }
+    colon2   = s{ s(:colon2, s(:const, atom), atom) }
     expected = s{ s(:const, "Minitest::Test") }
 
     new_sexp = @sexp.replace_sexp(colon2) { |r|
@@ -1392,8 +1343,8 @@ class TestUseCase < Minitest::Test
       s(:const, "%s::%s" % [a, b])
     }
 
-    assert_equal 1, (new_sexp / expected).length, @sexp.inspect
-    assert_equal 0, (@sexp    / expected).length, @sexp.inspect
+    assert_search 1, new_sexp, expected
+    assert_search 0, @sexp, expected
   end
 end
 

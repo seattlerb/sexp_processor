@@ -374,25 +374,26 @@ class Sexp
   # Example:
   #   s(:a, s(:b)) / Q{ s(:b) } => [s(:b)]
 
-  def / pattern, data = {}
-    MatchCollection.new search_each(pattern, data).map(&:itself)
+  def / pattern
+    raise ArgumentError, "Not a pattern: #{pattern.inspect}" unless Matcher === pattern
+    pattern / self
   end
 
   ##
   # Searches for the +pattern+ yielding a SexpResult for each match.
 
-  def search_each pattern, data = {}, &block
+  def search_each pattern, &block
     raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
-    return enum_for(:search_each, pattern, data) unless block_given?
+    return enum_for(:search_each, pattern) unless block_given?
 
-    if pattern.satisfy? self, data then
-      res = MatchResult.new self, data
+    if pattern.satisfy? self then
+      res = MatchResult.new self
       yield res
     end
 
     self.each_sexp do |subset|
-      subset.search_each pattern, data, &block
+      subset.search_each pattern, &block
     end
   end
 
@@ -401,41 +402,23 @@ class Sexp
   # for each match, and replacing it with the result of
   # the block.
 
-  def replace_sexp pattern, data = {}, &block # TODO: rename to gsub
+  def replace_sexp pattern, &block # TODO: rename to gsub
     raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
-    if pattern.satisfy? self, data then
-      res = Sexp::MatchResult.new self, data
+    if pattern.satisfy? self then
+      res = Sexp::MatchResult.new self
       return yield res
     end
 
     self.class.new(*self.map { |subset|
                      case subset
                      when Sexp then
-                       subset.replace_sexp pattern, data, &block
+                       subset.replace_sexp pattern, &block
                      else
                        subset
                      end
                    })
   end
-
-  ##
-  # Sets a named capture for the Matcher. If a SexpResult is returned
-  # any named captures will be available it.
-
-  def capture_as name
-    @capture_name = name
-    self
-  end
-
-  alias_method :%, :capture_as # TODO: remove capture_as
-
-  def capture_match obj, data
-    data[@capture_name] = obj if defined?(@capture_name) && @capture_name
-    data
-  end
-
-  private :capture_match
 
   ##
   # This is the longhand method for create a Sexp query, normally
@@ -603,7 +586,7 @@ class Sexp
     # TODO: push this up to Sexp and make this the workhorse
     # TODO: do the same with ===/satisfy?
 
-    def satisfy? o, data = {}
+    def satisfy? o
       return unless o.kind_of?(Sexp) &&
         (length == o.length || Matcher === last && last.greedy?)
 
@@ -611,11 +594,11 @@ class Sexp
         sexp = o.at i # HACK? avoiding [] to flush out other problems in r2r
         if Sexp === child then # TODO: when will this NOT be a matcher?
           sexp = o.sexp_body i if child.respond_to?(:greedy?) && child.greedy?
-          child.satisfy? sexp, data
+          child.satisfy? sexp
         else
           child == sexp
         end
-      } && capture_match(o, data)
+      }
     end
 
     def self.match_subs?
@@ -636,6 +619,13 @@ class Sexp
     end
 
     alias === =~
+    # alias === satisfy?
+
+    def / sexp
+      raise ArgumentError, "can't both be matchers" if Matcher === sexp
+
+      MatchCollection.new sexp.search_each(self).map(&:itself)
+    end
 
     ##
     # Combines the Matcher with another Matcher, the resulting one will
@@ -812,8 +802,8 @@ class Sexp
     ##
     # Matches any single element.
 
-    def satisfy? o, data = {}
-      capture_match o, data
+    def satisfy? o
+      true
     end
 
     def inspect
@@ -832,8 +822,8 @@ class Sexp
     ##
     # Always satisfied once this is reached. Think of it as a var arg.
 
-    def satisfy? o, data = {}
-      capture_match o, data
+    def satisfy? o
+      true
     end
 
     def greedy?
@@ -869,10 +859,10 @@ class Sexp
     ##
     # Satisfied when any sub expressions match +o+
 
-    def satisfy? o, data = {}
+    def satisfy? o
       options.any? { |exp|
-        Sexp === exp && exp.satisfy?(o, data) || exp == o
-      } && capture_match(o, data)
+        Sexp === exp && exp.satisfy?(o) || exp == o
+      }
     end
 
     def inspect
@@ -908,10 +898,10 @@ class Sexp
     ##
     # Satisfied when all sub expressions match +o+
 
-    def satisfy? o, data = {}
+    def satisfy? o
       options.all? { |exp|
-        exp.kind_of?(Sexp) ? exp.satisfy?(o, data) : exp == o
-      } && capture_match(o, data)
+        exp.kind_of?(Sexp) ? exp.satisfy?(o) : exp == o
+      }
     end
 
     def inspect
@@ -947,10 +937,8 @@ class Sexp
     ##
     # Satisfied if a +o+ does not match the +value+
 
-    def satisfy? o, data = {}
-      return nil if value.kind_of?(Sexp) ? value.satisfy?(o, data) : value == o
-
-      capture_match o, {}
+    def satisfy? o
+      !(value.kind_of?(Sexp) ? value.satisfy?(o) : value == o)
     end
 
     def inspect
@@ -986,14 +974,11 @@ class Sexp
     # Satisfied if matches +child+ or +o+ has a descendant matching
     # +child+.
 
-    def satisfy? o, data = {}
-      if child.satisfy? o, data
-        capture_match o, data
+    def satisfy? o
+      if child.satisfy? o
+        true
       elsif o.kind_of? Sexp
-        o.search_each(child, data) do
-          return capture_match(o, data)
-        end
-        false
+        o.search_each(child).any?
       end
     end
 
@@ -1015,10 +1000,8 @@ class Sexp
     ##
     # Satisfied when +o+ is an atom (anything that is not an S-Expression)
 
-    def satisfy? o, data = {}
-      return nil if o.kind_of? Sexp
-
-      capture_match o, data
+    def satisfy? o
+      !(o.kind_of? Sexp)
     end
 
     ##
@@ -1054,10 +1037,8 @@ class Sexp
     ##
     # Satisfied if +o+ is an atom, and +o+ matches +pattern+
 
-    def satisfy? o, data = {}
-      return nil unless !o.kind_of?(Sexp) && o.to_s =~ pattern
-
-      capture_match o, data
+    def satisfy? o
+      !o.kind_of?(Sexp) && o.to_s =~ pattern # TODO: question to_s
     end
 
     def inspect
@@ -1092,10 +1073,8 @@ class Sexp
     ##
     # Satisfied if the sexp_type of +o+ is +type+.
 
-    def satisfy? o, data = {}
-      return nil unless o.kind_of?(Sexp) && o.sexp_type == sexp_type
-
-      capture_match o, data
+    def satisfy? o
+      o.kind_of?(Sexp) && o.sexp_type == sexp_type
     end
 
     def inspect
@@ -1131,11 +1110,11 @@ class Sexp
     # Satisfied if a +o+ is a Sexp and one of +o+'s elements matches
     # value
 
-    def satisfy? o, data = {}
+    def satisfy? o
       Sexp === o && o.any? { |c|
         # TODO: switch to respond_to??
-        Sexp === value ? value.satisfy?(c, data) : value == c
-      } && capture_match(o, data)
+        Sexp === value ? value.satisfy?(c) : value == c
+      }
     end
 
     def inspect
@@ -1175,7 +1154,7 @@ class Sexp
     ##
     # Satisfied if o contains +subject+ followed by +sibling+
 
-    def satisfy? o, data = {}
+    def satisfy? o
       # Future optimizations:
       # * Shortcut matching sibling
       subject_matches = index_matches(subject, o)
@@ -1184,16 +1163,11 @@ class Sexp
       sibling_matches = index_matches(sibling, o)
       return nil if sibling_matches.empty?
 
-      subject_matches.each do |i1, data_1|
-        sibling_matches.each do |i2, data_2|
-          if (distance ? (i2-i1 == distance) : i2 > i1)
-            data = data.merge(data_1).merge(data_2)
-            return capture_match(o, data)
-          end
-        end
-      end
-
-      nil
+      subject_matches.any? { |i1, data_1|
+        sibling_matches.any? { |i2, data_2|
+          distance ? (i2-i1 == distance) : i2 > i1
+        }
+      }
     end
 
     def inspect
@@ -1224,7 +1198,7 @@ class Sexp
 
       o.each_with_index do |e, i|
         data = {}
-        if pattern.kind_of?(Sexp) ? pattern.satisfy?(e, data) : pattern == o[i]
+        if pattern.kind_of?(Sexp) ? pattern.satisfy?(e) : pattern == o[i]
           indexes << [i, data]
         end
       end
@@ -1265,7 +1239,7 @@ class Sexp
     # Sexp.
 
     def / pattern, d = {}
-      self.sexp./(pattern, d)
+      pattern / sexp
     end
 
     def to_s
@@ -1301,9 +1275,9 @@ class Sexp
     ##
     # See Traverse#search
 
-    def / pattern, data = {}
+    def / pattern
       inject(self.class.new) { |result, match|
-        result.concat match./(pattern, data)
+        result.concat match / pattern
       }
     end
 
