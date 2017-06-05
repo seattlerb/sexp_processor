@@ -32,8 +32,6 @@ def pyramid_sexp max
 end
 
 class SexpTestCase < Minitest::Test
-  prove_it! # require an assertion in every test
-
   M  = Sexp::Matcher
   MC = Sexp::MatchCollection
   MR = Sexp::MatchResult
@@ -180,9 +178,9 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_array_type_eh
     capture_io do # HACK
-      assert_equal false, @sexp.array_type?
+      assert_equal false, s(:lit, 42).array_type?
       @sexp.unshift :array
-      assert_equal true, @sexp.array_type?
+      assert_equal true, s(:array, 42).array_type?
     end
   end
 
