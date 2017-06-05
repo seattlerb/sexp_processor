@@ -1,5 +1,7 @@
 $TESTING ||= false # unless defined $TESTING
 
+require "forwardable"
+
 ##
 # Sexps are the basic storage mechanism of SexpProcessor.  Sexps have
 # a +type+ (to be renamed +node_type+) which is the first element of
@@ -10,39 +12,35 @@ class Sexp < Array # ZenTest FULL
   attr_writer :line
   attr_accessor :file, :comments
 
-  @@array_types = [ :array, :args, ]
+  @@array_types = [ :array, :args ] # TODO: remove
 
   ##
   # Create a new Sexp containing +args+.
 
-  def initialize(*args)
+  def initialize *args
     super(args)
   end
 
   ##
   # Creates a new Sexp from Array +a+.
 
-  def self.from_array(a)
+  def self.from_array a
     ary = Array === a ? a : [a]
 
-    result = self.new
-
-    ary.each do |x|
-      case x
-      when Sexp
-        result << x
-      when Array
-        result << self.from_array(x)
-      else
-        result << x
-      end
-    end
-
-    result
+    self.new(*ary.map { |x|
+               case x
+               when Sexp
+                 x
+               when Array
+                 self.from_array(x)
+               else
+                 x
+               end
+             })
   end
 
-  def ==(obj) # :nodoc:
-    obj.class == self.class and super
+  def == obj # :nodoc:
+    obj.class == self.class and super # only because of a bug in ruby
   end
 
   ##
@@ -60,18 +58,19 @@ class Sexp < Array # ZenTest FULL
   # REFACTOR: to TypedSexp - we only care when we have units.
 
   def array_type?
+    warn "DEPRECATED: please file an issue if you actually use this. from #{caller.first}"
     type = self.sexp_type
     @@array_types.include? type
   end
 
   def compact # :nodoc:
-    self.delete_if { |o| o.nil? }
+    self.delete_if(&:nil?)
   end
 
   ##
   # Recursively enumerates the sexp yielding to +block+ for every element.
 
-  def deep_each(&block)
+  def deep_each &block
     return enum_for(:deep_each) unless block_given?
 
     self.each_sexp do |sexp|
@@ -80,6 +79,9 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  ##
+  # Return the maximum depth of the sexp. One-based.
+
   def depth
     1 + (each_sexp.map(&:depth).max || 0)
   end
@@ -87,14 +89,12 @@ class Sexp < Array # ZenTest FULL
   ##
   # Enumeratates the sexp yielding to +b+ when the node_type == +t+.
 
-  def each_of_type(t, &b)
+  def each_of_type t, &b
     return enum_for(:each_of_type) unless block_given?
 
-    each do | elem |
-      if Sexp === elem then
-        elem.each_of_type(t, &b)
-        b.call(elem) if elem.sexp_type == t
-      end
+    each_sexp do | sexp |
+      sexp.each_of_type(t, &b)
+      yield sexp if sexp.sexp_type == t
     end
   end
 
@@ -115,12 +115,12 @@ class Sexp < Array # ZenTest FULL
   # Replaces all elements whose node_type is +from+ with +to+. Used
   # only for the most trivial of rewrites.
 
-  def find_and_replace_all(from, to)
+  def find_and_replace_all from, to
     each_with_index do | elem, index |
       if Sexp === elem then
         elem.find_and_replace_all(from, to)
-      else
-        self[index] = to if elem == from
+      elsif elem == from
+        self[index] = to
       end
     end
   end
@@ -128,25 +128,28 @@ class Sexp < Array # ZenTest FULL
   ##
   # Replaces all Sexps matching +pattern+ with Sexp +repl+.
 
-  def gsub(pattern, repl)
-    # TODO: retest and rewrite for new patterns
+  def gsub pattern, repl
     return repl if pattern == self
 
-    new = self.map do |subset|
+    new = self.map { |subset|
       case subset
       when Sexp then
-        subset.gsub(pattern, repl)
+        if Matcher === pattern && pattern.satisfy?(subset) then # TODO: make === be satisfy? maybe?
+          repl.dup
+        else
+          subset.gsub pattern, repl
+        end
       else
         subset
       end
-    end
+    }
 
-    return Sexp.from_array(new)
+    Sexp.from_array new
   end
 
   def inspect # :nodoc:
     sexp_str = self.map(&:inspect).join ", "
-    if ENV['VERBOSE'] && line then
+    if ENV["VERBOSE"] && line then
       "s(#{sexp_str}).line(#{line})"
     else
       "s(#{sexp_str})"
@@ -172,7 +175,7 @@ class Sexp < Array # ZenTest FULL
   # Find every node with type +name+.
 
   def find_nodes name
-    find_all { | sexp | Sexp === sexp and sexp.sexp_type == name }
+    each_sexp.find_all { |sexp| sexp.sexp_type == name }
   end
 
   ##
@@ -180,7 +183,7 @@ class Sexp < Array # ZenTest FULL
   # returns the line number. This allows you to do message cascades
   # and still get the sexp back.
 
-  def line(n=nil)
+  def line n = nil
     if n then
       @line = n
       self
@@ -200,14 +203,7 @@ class Sexp < Array # ZenTest FULL
   # Returns the size of the sexp, flattened.
 
   def mass
-    @mass ||=
-      inject(1) { |t, s|
-      if Sexp === s then
-        t + s.mass
-      else
-        t
-      end
-    }
+    @mass ||= inject(1) { |t, s| Sexp === s ? t + s.mass : t }
   end
 
   ##
@@ -230,11 +226,11 @@ class Sexp < Array # ZenTest FULL
     super
   end
 
-  def pretty_print(q) # :nodoc:
-    nnd = ')'
-    nnd << ".line(#{line})" if line && ENV['VERBOSE']
+  def pretty_print q # :nodoc:
+    nnd = ")"
+    nnd << ".line(#{line})" if line && ENV["VERBOSE"]
 
-    q.group(1, 's(', nnd) do
+    q.group(1, "s(", nnd) do
       q.seplist(self) {|v| q.pp v }
     end
   end
@@ -254,10 +250,11 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
-  # Returns the Sexp body, ie the values without the node type.
+  # Returns the Sexp body (starting at +from+, defaulting to 1), ie
+  # the values without the node type.
 
-  def sexp_body
-    self[1..-1]
+  def sexp_body from = 1
+    self[from..-1]
   end
 
   ##
@@ -277,7 +274,7 @@ class Sexp < Array # ZenTest FULL
   def shift
     raise "I'm empty" if self.empty?
     super
-  end if ($DEBUG or $TESTING) unless (defined?(RUBY_ENGINE) and RUBY_ENGINE == "maglev")
+  end if ($DEBUG or $TESTING)
 
   ##
   # Returns the bare bones structure of the sexp.
@@ -285,6 +282,7 @@ class Sexp < Array # ZenTest FULL
 
   def structure
     if Array === self.sexp_type then
+      warn "NOTE: form s(s(:subsexp)).structure is deprecated. Removing in 5.0"
       s(:bogus, *self).structure # TODO: remove >= 4.2.0
     else
       result = s(self.sexp_type)
@@ -298,8 +296,9 @@ class Sexp < Array # ZenTest FULL
   ##
   # Replaces the Sexp matching +pattern+ with +repl+.
 
-  def sub(pattern, repl)
+  def sub pattern, repl
     return repl.dup if pattern == self
+    return repl.dup if Matcher === pattern && pattern.satisfy?(self)
 
     done = false
 
@@ -312,11 +311,11 @@ class Sexp < Array # ZenTest FULL
           if pattern == subset then
             done = true
             repl.dup
-          elsif pattern === subset then
+          elsif Matcher === pattern && pattern.satisfy?(subset) then
             done = true
-            subset.sub pattern, repl
+            repl.dup
           else
-            subset
+            subset.sub pattern, repl
           end
         else
           subset
@@ -324,7 +323,7 @@ class Sexp < Array # ZenTest FULL
       end
     end
 
-    return Sexp.from_array(new)
+    Sexp.from_array new
   end
 
   def to_a # :nodoc:
@@ -337,89 +336,9 @@ class Sexp < Array # ZenTest FULL
 end
 
 ##
-# I'm starting to warm up to this idea!
-# ENV["STRICT_SEXP"] turns on various levels of conformance checking
-#
-# 1 = sexp[0]         => sexp_type
-# 1 = sexp.first      => sexp_type
-# 1 = sexp[0] = x     => sexp_type = x
-# 1 = sexp[1..-1]     => sexp_body
-# 1 = sexp[1..-1] = x => sexp_body = x
-# 1 = sexp[-1]        => last
-# 2 = sexp[1]         => no
-# 2 = sexp[1] = x     => no
-# 3 = sexp[n]         => no
-# 3 = sexp[n] = x     => no
-# 4 = sexp.replace x  => no
-# 4 = sexp.concat x   => no
-
-class Sexp
-
-  alias safe_idx []
-  alias safe_asgn []=
-  alias sexp_type= sexp_type=
-  alias sexp_body= sexp_body=
-
-  def self.__strict
-    ENV["STRICT_SEXP"].to_i
-  end
-
-  def __strict
-    self.class.__strict
-  end
-
-  def [] i
-    raise "use sexp_type" if i == 0
-    raise "use sexp_body" if i == (1..-1)
-    raise "use last" if i == -1
-    raise "no idx>1: #{inspect}[#{i}]" if Integer === i && i > 1 if __strict > 1
-    raise "no idx: #{inspect}[#{i}]" if __strict > 2
-    self.safe_idx i
-  end
-
-  def []= i, v
-    raise "use sexp_type=" if i == 0
-    raise "use sexp_body=" if i == (1..-1)
-    raise "no asgn>1: #{inspect}[#{i}] = #{v.inspect}" if Integer === i && i > 1 if
-      __strict > 1
-    raise "no asgn: #{inspect}[#{i}] = #{v.inspect}" if
-      __strict > 2
-    self.safe_asgn i, v
-  end
-
-  def first
-    raise "use sexp_type"
-  end
-
-  def replace o
-    raise "no: %p.replace %p" % [self, o]
-  end if __strict > 3
-
-  def concat o
-    raise "no: %p.concat %p" % [self, o]
-  end if __strict > 3
-
-  def sexp_type
-    safe_idx 0
-  end
-
-  def sexp_body
-    safe_idx 1..-1
-  end
-
-  def sexp_type= v
-    self.safe_asgn 0, v
-  end
-
-  def sexp_body= v
-    self.safe_asgn 1..-1, v
-  end
-end unless Sexp.new.respond_to? :safe_asgn if ENV["STRICT_SEXP"]
-
-##
 # This is a very important shortcut to make using Sexps much more awesome.
 
-def s(*args, &blk)
+def s *args, &blk
   return Sexp.q(&blk) if blk
   Sexp.new(*args)
 end
@@ -444,7 +363,9 @@ end
 # and the tests supplied with Sexp.
 
 class Sexp
-  # undef_method :method_missing # HACK - helps me find my own typos
+  # def !@ # TODO? I dunno, needs to convert s -> q?
+  #   Sexp::Matcher::Not.new self
+  # end
 
   ##
   # Searches for the +pattern+ returning a SexpCollection containing
@@ -453,28 +374,25 @@ class Sexp
   # Example:
   #   s(:a, s(:b)) / Q{ s(:b) } => [s(:b)]
 
-  def search pattern, data = {}
-    raise ArgumentError, "must be a Matcher" unless Matcher === pattern
-
-    collection = Sexp::MatchCollection.new
-    search_each pattern, data do |match|
-      collection << match
-    end
-    collection
+  def / pattern, data = {}
+    MatchCollection.new search_each(pattern, data).map(&:itself)
   end
-
-  alias_method :/, :search # TODO: remove
 
   ##
   # Searches for the +pattern+ yielding a SexpResult for each match.
 
   def search_each pattern, data = {}, &block
-    return false unless pattern.kind_of? Matcher
+    raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
-    yield Sexp::MatchResult.new(self, data) if pattern.satisfy?(self, data)
+    return enum_for(:search_each, pattern, data) unless block_given?
 
-    self.each do |subset|
-      subset.search_each pattern, data, &block if Sexp === subset
+    if pattern.satisfy? self, data then
+      res = MatchResult.new self, data
+      yield res
+    end
+
+    self.each_sexp do |subset|
+      subset.search_each pattern, data, &block
     end
   end
 
@@ -484,19 +402,21 @@ class Sexp
   # the block.
 
   def replace_sexp pattern, data = {}, &block # TODO: rename to gsub
-    return self unless pattern.kind_of? Matcher
+    raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
-    return yield Sexp::MatchResult.new(self, data) if pattern.satisfy?(self, data)
-
-    result = dup
-
-    result.each_with_index do |subset, i|
-      case subset
-      when Sexp then result[i] = subset.replace_sexp(pattern, data, &block)
-      end
+    if pattern.satisfy? self, data then
+      res = Sexp::MatchResult.new self, data
+      return yield res
     end
 
-    result
+    self.class.new(*self.map { |subset|
+                     case subset
+                     when Sexp then
+                       subset.replace_sexp pattern, data, &block
+                     else
+                       subset
+                     end
+                   })
   end
 
   ##
@@ -508,7 +428,7 @@ class Sexp
     self
   end
 
-  alias_method :%, :capture_as
+  alias_method :%, :capture_as # TODO: remove capture_as
 
   def capture_match obj, data
     data[@capture_name] = obj if defined?(@capture_name) && @capture_name
@@ -619,12 +539,7 @@ class Sexp
   #   s(:a) / s { s(is_not :a) } #=> []
 
   def self.not? arg
-    Not.new(arg)
-  end
-
-  class << self
-    alias is_not not?
-    # TODO: alias ! not?
+    Not.new arg
   end
 
   ##
@@ -634,7 +549,7 @@ class Sexp
   #   s(s(s(s(s(:a))))) / s { child(s(:a)) } #=> [s(s(s(s(s(:a)))))]
 
   def self.child child
-    Child.new(child)
+    Child.new child
   end
 
   ##
@@ -646,7 +561,7 @@ class Sexp
   #   s(:a, s(:b, :c)) / s { t(:b) } #=> [s(:b, :c)]
 
   def self.t name
-    Type.new(name)
+    Type.new name
   end
 
   ##
@@ -657,83 +572,18 @@ class Sexp
   #   s(:a) / s { m(/\w/,/\d/) } #=> [s(:a)]
   #   s(:tests, s(s(:test_a), s(:test_b))) / s { m(/test_\w/) } #=> [s(:test_a), s(:test_b)]
 
-  def self.m * patterns
-    patterns = patterns.map { |p|
-      p.kind_of?(Regexp) ? p : Regexp.new("\\A"+Regexp.escape(p.to_s)+"\\Z")
-    }
-    regexp = Regexp.union(*patterns)
-    Pattern.new(regexp)
-  end
-
-  ##
-  # Wraps the results of a Sexp query. The matching Sexp
-  # is placed in SexpResult#sexp. Any named captures will be
-  # available with SexpResult#[].
-  #
-  # For instance:
-  #   res = s(:a) / s { s( _ % :name) }
-  #
-  #   res.first.sexp == s(:a)
-  #   res.first[:name] == :a
-
-  class MatchResult < Hash # TODO: not a subclass of hash
-    attr_accessor :sexp # Matched Sexp
-
-    def initialize sexp, data = {}
-      @sexp = sexp
-      merge! data
-    end
-
-    ##
-    # Shortcut for querying directly against a result's
-    # Sexp.
-
-    def search pattern, data = {}
-      @sexp.search(pattern, data)
-    end
-
-    alias_method :/, :search
-
-    def to_s
-      if empty?
-        @sexp.to_s
+  def self.m * values
+    res = values.map { |value|
+      case value
+      when Regexp then
+        value
       else
-        matches = self.map { |k, v| "#{k}:#{v}" }.join(", ")
-        "#{@sexp} [#{matches}]"
+        re = Regexp.escape value.to_s
+        Regexp.new "\\A%s\\Z" % re
       end
-    end
-
-    def inspect
-      "#{@sexp} #{super}" # TODO: make this output code to repro object
-    end
-
-    def pretty_print q # :nodoc:
-      @sexp.pretty_print q
-      q.text " "
-      super
-    end
-  end # class MatchResult
-
-  ##
-  # Wraps the results of a Sexp query.
-  # SexpCollection defines SexpCollection#search so that you can
-  # chain queries.
-  #
-  # For instance:
-  #   res = s(:a, s(:b)) / s { s(:a,_) } / s { s(:b) }
-
-  class MatchCollection < Array
-    ##
-    # See Traverse#search
-
-    def search pattern
-      inject(self.class.new) { |collection, match|
-        collection.concat match.search(pattern, match)
-      }
-    end
-
-    alias_method :/, :search
-  end # class MatchCollection
+    }
+    Pattern.new Regexp.union(*res)
+  end
 
   ##
   # This is an abstract matcher class.
@@ -760,7 +610,7 @@ class Sexp
       each_with_index.all? { |child, i|
         sexp = o.at i # HACK? avoiding [] to flush out other problems in r2r
         if Sexp === child then # TODO: when will this NOT be a matcher?
-          sexp = o[i..-1] if child.respond_to?(:greedy?) && child.greedy?
+          sexp = o.sexp_body i if child.respond_to?(:greedy?) && child.greedy?
           child.satisfy? sexp, data
         else
           child == sexp
@@ -768,11 +618,21 @@ class Sexp
       } && capture_match(o, data)
     end
 
+    def self.match_subs?
+      @@match_subs
+    end
+
+    def self.match_subs= o
+      @@match_subs = o
+    end
+
+    self.match_subs = true
+
     def =~ o
       raise ArgumentError, "can't both be matchers" if Matcher === o
-      raise ArgumentError, "must be a sexp" unless Sexp === o
 
-      self.satisfy?(o) || o.any? { |sub| Sexp === sub && self =~ sub }
+      self.satisfy?(o) ||
+        (self.class.match_subs? && o.each_sexp.any? { |sub| self =~ sub })
     end
 
     alias === =~
@@ -806,7 +666,7 @@ class Sexp
     #   -s(:a)
 
     def -@
-      Not.new(self)
+      Not.new self
     end
 
     ##
@@ -829,7 +689,7 @@ class Sexp
       s
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "q(", ")" do
         q.seplist self do |v|
           q.pp v
@@ -865,10 +725,6 @@ class Sexp
 
       def peek_token
         tokens.first
-      end
-
-      def undo_token token
-        tokens.unshift token
       end
 
       def parse
@@ -910,14 +766,12 @@ class Sexp
         when /^\/(.*)\/$/ then
           re = $1
           raise SyntaxError, "Not allowed: /#{re.inspect}/" unless
-            re =~ /\A([\w()|]+)\z/
+            re =~ /\A([\w()|.*+^$]+)\z/
           Regexp.new re
         when /^"(.*)"$/ then
           $1
         when /^\w+$/ then
           token.to_sym
-        when nil then
-          token
         else
           raise SyntaxError, "unhandled token: #{token.inspect}"
         end
@@ -956,13 +810,6 @@ class Sexp
 
   class Wild < Matcher
     ##
-    # Creates a Matcher which will match any remaining
-    # Defaults to matching the immediate following sibling. FIX
-
-    # def initialize
-    # end
-
-    ##
     # Matches any single element.
 
     def satisfy? o, data = {}
@@ -982,13 +829,6 @@ class Sexp
   # See SexpQueryBuilder.___
 
   class Remaining < Matcher
-    ##
-    # Creates a Matcher which will match any remaining
-    # Defaults to matching the immediate following sibling. FIX
-
-    # def initialize
-    # end
-
     ##
     # Always satisfied once this is reached. Think of it as a var arg.
 
@@ -1022,6 +862,10 @@ class Sexp
       @options = options
     end
 
+    def == o
+      super && self.options == o.options
+    end
+
     ##
     # Satisfied when any sub expressions match +o+
 
@@ -1035,7 +879,7 @@ class Sexp
       options.map(&:inspect).join(" | ")
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "any(", ")" do
         q.seplist options do |v|
           q.pp v
@@ -1049,6 +893,10 @@ class Sexp
 
   class All < Matcher
     attr_reader :options
+
+    def == o
+      super && self.options == o.options
+    end
 
     ##
     # Create an All matcher which will match all of the +options+.
@@ -1070,7 +918,7 @@ class Sexp
       options.map(&:inspect).join(" & ")
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "all(", ")" do
         q.seplist options do |v|
           q.pp v
@@ -1092,6 +940,10 @@ class Sexp
       @value = value
     end
 
+    def == o
+      super && self.value == o.value
+    end
+
     ##
     # Satisfied if a +o+ does not match the +value+
 
@@ -1102,11 +954,11 @@ class Sexp
     end
 
     def inspect
-      "not(%p)" % value
+      "not?(%p)" % [value]
     end
 
-    def pretty_print(q) # :nodoc:
-      q.group 1, "not(", ")" do
+    def pretty_print q # :nodoc:
+      q.group 1, "not?(", ")" do
         q.pp value
       end
     end
@@ -1117,6 +969,10 @@ class Sexp
 
   class Child < Matcher
     attr_reader :child
+
+    def == o
+      super && self.child == o.child
+    end
 
     ##
     # Create a Child matcher which will match anything having a
@@ -1131,12 +987,13 @@ class Sexp
     # +child+.
 
     def satisfy? o, data = {}
-      if child.satisfy?(o, data)
+      if child.satisfy? o, data
         capture_match o, data
       elsif o.kind_of? Sexp
         o.search_each(child, data) do
           return capture_match(o, data)
         end
+        false
       end
     end
 
@@ -1144,7 +1001,7 @@ class Sexp
       "child(%p)" % [child]
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "child(", ")" do
         q.pp child
       end
@@ -1171,7 +1028,7 @@ class Sexp
       "atom"
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.text "atom"
     end
   end
@@ -1181,6 +1038,10 @@ class Sexp
 
   class Pattern < Matcher
     attr_reader :pattern
+
+    def == o
+      super && self.pattern == o.pattern
+    end
 
     ##
     # Create a Patten matcher which will match any atom that either
@@ -1203,7 +1064,7 @@ class Sexp
       "m(%p)" % pattern
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "m(", ")" do
         q.pp pattern
       end
@@ -1224,6 +1085,10 @@ class Sexp
       @sexp_type = type
     end
 
+    def == o
+      super && self.sexp_type == o.sexp_type
+    end
+
     ##
     # Satisfied if the sexp_type of +o+ is +type+.
 
@@ -1234,12 +1099,12 @@ class Sexp
     end
 
     def inspect
-      "t(#{sexp_type.inspect})"
+      "t(%p)" % sexp_type
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "t(", ")" do
-        q.pp pattern
+        q.pp sexp_type
       end
     end
   end
@@ -1249,6 +1114,10 @@ class Sexp
 
   class Include < Matcher
     attr_reader :value
+
+    def == o
+      super && self.value == o.value
+    end
 
     ##
     # Creates a Matcher which will match any Sexp that contains the
@@ -1273,7 +1142,7 @@ class Sexp
       "include(%p)" % [value]
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       q.group 1, "include(", ")" do
         q.pp value
       end
@@ -1285,6 +1154,13 @@ class Sexp
 
   class Sibling < Matcher
     attr_reader :subject, :sibling, :distance
+
+    def == o
+      super &&
+        self.subject  == o.subject &&
+        self.sibling  == o.sibling &&
+        self.distance == o.distance
+    end
 
     ##
     # Creates a Matcher which will match any pair of Sexps that are siblings.
@@ -1324,7 +1200,7 @@ class Sexp
       "%p >> %p" % [subject, sibling]
     end
 
-    def pretty_print(q) # :nodoc:
+    def pretty_print q # :nodoc:
       if distance then
         q.group 1, "sibling(", ")" do
           q.seplist [subject, sibling, distance] do |v|
@@ -1334,7 +1210,7 @@ class Sexp
       else
         q.group 1 do
           q.pp subject
-          q.text " << "
+          q.text " >> "
           q.pp sibling
         end
       end
@@ -1356,4 +1232,91 @@ class Sexp
       indexes
     end
   end # class Sibling
+
+  ##
+  # Wraps the results of a Sexp query. The matching Sexp
+  # is placed in SexpResult#sexp. Any named captures will be
+  # available with SexpResult#[].
+  #
+  # For instance:
+  #   res = s(:a) / s { s( _ % :name) }
+  #
+  #   res.first.sexp == s(:a)
+  #   res.first[:name] == :a
+
+  class MatchResult
+    extend Forwardable
+    def_delegators :@data, :[], :[]=, :values_at
+
+    attr_accessor :sexp
+    attr_accessor :data
+
+    def initialize sexp, data = {}
+      @sexp = sexp
+      @data = data.dup
+    end
+
+    def == o
+      self.class == o.class && self.sexp == o.sexp && self.data == o.data
+    end
+
+    ##
+    # Shortcut for querying directly against a result's
+    # Sexp.
+
+    def / pattern, d = {}
+      self.sexp./(pattern, d)
+    end
+
+    def to_s
+      if data.empty?
+        "MatchResult.new(%s)" % [sexp]
+      else
+        "MatchResult.new(%s, %s)" % [sexp, data]
+      end
+    end
+
+    def inspect
+      "MatchResult.new(%p, %p)" % [sexp, data]
+    end
+
+    def pretty_print q # :nodoc:
+      q.group 1, "MatchResult.new(", ")" do
+        q.pp sexp
+        q.text ", "
+        q.pp data
+      end
+    end
+  end # class MatchResult
+
+  ##
+  # Wraps the results of a Sexp query.
+  # SexpCollection defines SexpCollection#search so that you can
+  # chain queries.
+  #
+  # For instance:
+  #   res = s(:a, s(:b)) / s { s(:a,_) } / s { s(:b) }
+
+  class MatchCollection < Array
+    ##
+    # See Traverse#search
+
+    def / pattern, data = {}
+      inject(self.class.new) { |result, match|
+        result.concat match./(pattern, data)
+      }
+    end
+
+    def inspect
+      "MatchCollection.new(%s)" % self.to_a.inspect[1..-2]
+    end
+
+    alias :to_s :inspect
+
+    def pretty_print q
+      q.group 1, "MatchCollection.new(", ")" do
+        q.seplist(self) {|v| q.pp v }
+      end
+    end
+  end # class MatchCollection
 end
