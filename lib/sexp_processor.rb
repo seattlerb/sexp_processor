@@ -1,6 +1,6 @@
 $TESTING = false unless defined? $TESTING
 
-require 'sexp'
+require "sexp"
 
 ##
 # SexpProcessor provides a uniform interface to process Sexps.
@@ -102,7 +102,7 @@ class SexpProcessor
 
     dirs.flatten.map { |p|
       if File.directory? p then
-        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+        Dir[File.join(p, "**", "*.{#{extensions.join ","}}")]
       else
         p
       end
@@ -160,7 +160,7 @@ class SexpProcessor
     end
   end
 
-  def assert_empty(meth, exp, exp_orig)
+  def assert_empty meth, exp, exp_orig
     unless exp.empty? then
       msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
       msg += " from #{exp_orig.inspect}" if $DEBUG
@@ -168,10 +168,10 @@ class SexpProcessor
     end
   end
 
-  def rewrite(exp)
+  def rewrite exp
     type = exp.sexp_type
 
-    if @debug.has_key? type then
+    if @debug.key? type then
       str = exp.inspect
       puts "// DEBUG (original ): #{str}" if str =~ @debug[type]
     end
@@ -180,18 +180,19 @@ class SexpProcessor
       exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
     end
 
-    begin
+    loop do
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth
       break unless Sexp === exp
 
-      if @debug.has_key? type then
+      if @debug.key? type then
         str = exp.inspect
         puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
       end
 
       old_type, type = type, exp.sexp_type
-    end until old_type == type
+      break if old_type == type
+    end
 
     exp
   end
@@ -201,7 +202,7 @@ class SexpProcessor
   # the Sexp type given.  Performs additional checks as specified by
   # the initializer.
 
-  def process(exp)
+  def process exp
     return nil if exp.nil?
 
     unless Sexp === exp then
@@ -215,7 +216,7 @@ class SexpProcessor
     end
 
     unless @unsupported_checked then
-      m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').to_sym }
+      m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, "").to_sym }
       supported = m - (m - @unsupported)
 
       raise UnsupportedNodeError, "#{supported.inspect} shouldn't be in @unsupported" unless supported.empty?
@@ -230,14 +231,14 @@ class SexpProcessor
       Symbol === type
 
     in_context type do
-      if @debug.has_key? type then
+      if @debug.key? type then
         str = exp.inspect
         puts "// DEBUG:(original ): #{str}" if str =~ @debug[type]
       end
 
       exp_orig = nil
       exp_orig = exp.deep_clone if $DEBUG or
-        @debug.has_key? type or @exceptions.has_key?(type)
+        @debug.key? type or @exceptions.key?(type)
 
       raise UnsupportedNodeError, "'#{type}' is not a supported node type" if
         @unsupported.include? type
@@ -256,12 +257,13 @@ class SexpProcessor
           self.send(meth, exp)
         end
 
-        if @debug.has_key? type then
+        if @debug.key? type then
           str = exp.inspect
           puts "// DEBUG (processed): #{str}" if str =~ @debug[type]
         end
 
-        raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
+        raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless
+          @expected === result
 
         self.assert_empty(meth, exp, exp_orig) if @require_empty
       else
@@ -274,7 +276,9 @@ class SexpProcessor
                 process(sub_exp)
               end
               raise "Result is a bad type" unless Array === sub_exp
-              raise "Result does not have a type in front: #{sub_exp.inspect}" unless Symbol === sub_exp.first unless sub_exp.empty?
+              raise "Result does not have a type in front: #{sub_exp.inspect}" unless
+                Symbol === sub_exp.first unless
+                sub_exp.empty?
             else
               sub_result = sub_exp
             end
@@ -298,28 +302,24 @@ class SexpProcessor
   ##
   # Raises unless the Sexp type for +list+ matches +typ+
 
-  def assert_type(list, typ)
+  def assert_type list, typ
     raise SexpTypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
       not Array === list or list.first != typ
   end
 
-  def error_handler(type, exp=nil) # :nodoc:
-    begin
-      return yield
-    rescue StandardError => err
-      if @exceptions.has_key? type then
-        return @exceptions[type].call(self, exp, err)
-      else
-        warn "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if $DEBUG
-        raise
-      end
-    end
+  def error_handler type, exp = nil # :nodoc:
+    yield
+  rescue StandardError => err
+    return @exceptions[type].call self, exp, err if @exceptions.key? type
+
+    warn "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if
+      $DEBUG
   end
 
   ##
   # Registers an error handler for +node+
 
-  def on_error_in(node_type, &block)
+  def on_error_in node_type, &block
     @exceptions[node_type] = block
   end
 
@@ -334,13 +334,9 @@ class SexpProcessor
   #     return s(:dummy, process(exp), s(:extra, 42))
   #   end
 
-  def process_dummy(exp)
+  def process_dummy exp
     result = @expected.new(:dummy) rescue @expected.new
-
-    until exp.empty? do
-      result << self.process(exp.shift)
-    end
-
+    result << self.process(exp.shift) until exp.empty?
     result
   end
 
@@ -397,12 +393,12 @@ class SexpProcessor
     # TODO: depth_of
 
     def [] name
-      hash = @env.find { |closure| closure.has_key? name }
+      hash = @env.find { |closure| closure.key? name }
       hash[name] if hash
     end
 
     def []= name, val
-      hash = @env.find { |closure| closure.has_key? name } || current
+      hash = @env.find { |closure| closure.key? name } || current
       hash[name] = val
     end
 
@@ -488,7 +484,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   ##
   # Adds name to the method stack, for the duration of the block
 
-  def in_method name, file, line, line_max=nil
+  def in_method name, file, line, line_max = nil
     method_name = Regexp === name ? name.inspect : name.to_s
     @method_stack.unshift method_name
     line_max = "-#{line_max}" if line_max
@@ -519,10 +515,10 @@ class MethodBasedSexpProcessor < SexpProcessor
   def klass_name
     name = @class_stack.first
 
-    if Sexp === name then
-      raise "you shouldn't see me"
-    elsif @class_stack.any?
-      @class_stack.reverse.join("::").sub(/\([^\)]+\)$/, '')
+    raise "you shouldn't see me" if Sexp === name
+
+    if @class_stack.any?
+      @class_stack.reverse.join("::").sub(/\([^\)]+\)$/, "")
     else
       @@no_class
     end
@@ -543,7 +539,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # to subclass and override this method, you can clall super with a
   # block.
 
-  def process_class(exp)
+  def process_class exp
     exp.shift unless auto_shift_type # node type
     in_klass exp.shift do
       if block_given? then
@@ -560,7 +556,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # have to subclass and override this method, you can clall super
   # with a block.
 
-  def process_defn(exp)
+  def process_defn exp
     exp.shift unless auto_shift_type # node type
     name = @sclass.empty? ? exp.shift : "::#{exp.shift}"
 
@@ -579,7 +575,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # If you have to subclass and override this method, you can clall
   # super with a block.
 
-  def process_defs(exp)
+  def process_defs exp
     exp.shift unless auto_shift_type # node type
     process exp.shift # recv
     in_method "::#{exp.shift}", exp.file, exp.line, exp.line_max do
@@ -597,7 +593,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # to subclass and override this method, you can clall super with a
   # block.
 
-  def process_module(exp)
+  def process_module exp
     exp.shift unless auto_shift_type # node type
     in_klass exp.shift do
       if block_given? then
@@ -614,7 +610,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   # you have to subclass and override this method, you can clall super
   # with a block.
 
-  def process_sclass(exp)
+  def process_sclass exp
     exp.shift unless auto_shift_type # node type
     in_sklass do
       if block_given? then

@@ -28,6 +28,9 @@
 # 4 = sexp.sort!      => no
 # 4 = sexp.sort_by!   => no
 # 4 = sexp.uniq!      => no
+# 4 = sexp.unshift    => no
+# 4 = sexp.push       => no
+# 4 = sexp.pop        => no
 
 class Sexp
   alias :safe_idx   :[]
@@ -48,6 +51,8 @@ class Sexp
   def __strict
     self.class.__strict
   end
+
+  undef_method :method_missing if __strict > 2
 
   def method_missing msg, *args
     raise "don't call method_missing on Sexps: %p.(%s)" % [msg, args.inspect[1..-2]]
@@ -81,7 +86,7 @@ class Sexp
   nuke_method :collect!, 4
   nuke_method :compact!, 4
   nuke_method :flatten!, 4
-  nuke_method :map!,     4
+  # nuke_method :map!,     4
   nuke_method :reject!,  4
   nuke_method :reverse!, 4
   nuke_method :rotate!,  4
@@ -91,6 +96,9 @@ class Sexp
   nuke_method :sort!,    4
   nuke_method :sort_by!, 4
   nuke_method :uniq!,    4
+  nuke_method :unshift,  4
+  nuke_method :push,     4
+  nuke_method :pop,      4
 
   def sexp_type
     safe_idx 0

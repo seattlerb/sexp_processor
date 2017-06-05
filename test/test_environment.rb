@@ -1,7 +1,7 @@
 $TESTING = true
 
-require 'minitest/autorun'
-require 'sexp_processor'
+require "minitest/autorun"
+require "sexp_processor"
 
 class TestEnvironment < Minitest::Test
 

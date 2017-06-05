@@ -83,7 +83,7 @@ class SexpTestCase < Minitest::Test
 end # class SexpTestCase
 
 class MatcherTestCase < SexpTestCase
-  def self.abstract_test_case! klass=self # REFACTOR: push this up to minitest
+  def self.abstract_test_case! klass = self # REFACTOR: push this up to minitest
     extend Module.new {
       define_method :run do |*args|
         super(*args) unless self == klass
@@ -1324,7 +1324,7 @@ class TestUseCase < SexpTestCase
     assert_equal exp, res.map(&:sexp)
 
     res.each do |m|
-      _, name, *_ = m.sexp
+      _, name, * = m.sexp
       counts[name] += 1
     end
 

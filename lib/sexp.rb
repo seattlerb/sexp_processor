@@ -705,7 +705,7 @@ class Sexp
       end
 
       def lex s
-        tokens.concat s.scan(/[()\[\]]|\"[^"]*\"|\/[^\/]*\/|[\w-]+/)
+        tokens.concat s.scan(%r%[()\[\]]|\"[^"]*\"|/[^/]*/|[\w-]+%)
       end
 
       def next_token
@@ -753,7 +753,7 @@ class Sexp
           Sexp.___
         when "_" then
           Sexp._
-        when /^\/(.*)\/$/ then
+        when %r%^/(.*)/$% then
           re = $1
           raise SyntaxError, "Not allowed: /#{re.inspect}/" unless
             re =~ /\A([\w()|.*+^$]+)\z/
@@ -1163,8 +1163,8 @@ class Sexp
       sibling_matches = index_matches(sibling, o)
       return nil if sibling_matches.empty?
 
-      subject_matches.any? { |i1, data_1|
-        sibling_matches.any? { |i2, data_2|
+      subject_matches.any? { |i1, _data_1|
+        sibling_matches.any? { |i2, _data_2|
           distance ? (i2-i1 == distance) : i2 > i1
         }
       }

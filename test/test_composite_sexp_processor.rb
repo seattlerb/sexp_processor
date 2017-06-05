@@ -1,7 +1,7 @@
 $TESTING = true
 
-require 'composite_sexp_processor'
-require 'minitest/autorun'
+require "composite_sexp_processor"
+require "minitest/autorun"
 
 class FakeProcessor1 < SexpProcessor # ZenTest SKIP
 
@@ -12,12 +12,10 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
     self.expected = Array
   end
 
-  def default_processor(exp)
+  def default_processor exp
     result = s()
     result << exp.shift
-    until exp.empty? do
-      result << exp.shift.to_s + " woot"
-    end
+    result << "#{exp.shift} woot" until exp.empty?
     result
   end
 end

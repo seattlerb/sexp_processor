@@ -2,8 +2,8 @@
 
 $TESTING = true
 
-require 'minitest/test'
-require 'sexp_processor' # for deep_clone
+require "minitest/test"
+require "sexp_processor" # for deep_clone
 
 # key:
 # wwtt = what were they thinking?
@@ -12,7 +12,7 @@ class Examples
   attr_reader :reader
   attr_writer :writer
 
-  def a_method(x); x+1; end
+  def a_method x; x+1; end
   alias an_alias a_method
 
   define_method(:bmethod_noargs) do
@@ -167,7 +167,7 @@ class ParseTreeTestCase < Minitest::Test
     install_missing_reporter
     clone_same
 
-    output_name = klass.name.to_s.sub(/^Test/, '')
+    output_name = klass.name.to_s.sub(/^Test/, "")
 
     input_name = self.previous(output_name)
 
@@ -202,7 +202,7 @@ class ParseTreeTestCase < Minitest::Test
     end
   end
 
-  def self.previous(key, extra=0) # FIX: remove R2C code
+  def self.previous key, extra=0 # FIX: remove R2C code
     idx = @@testcase_order.index(key)
 
     raise "Unknown class #{key} in @@testcase_order" if idx.nil?
@@ -307,7 +307,7 @@ class ParseTreeTestCase < Minitest::Test
               "Ruby2Ruby"    => "10")
 
   add_18tests("str_question_literal",
-              "Ruby"         => '?a',
+              "Ruby"         => "?a",
               "ParseTree"    => s(:lit, 97),
               "Ruby2Ruby"    => "97")
 
@@ -595,7 +595,7 @@ class ParseTreeTestCase < Minitest::Test
               "ParseTree"    => s(:str, "\n"))
 
   add_19tests("str_question_literal",
-              "Ruby"         => '?a',
+              "Ruby"         => "?a",
               "ParseTree"    => s(:str, "a"))
 
   add_19tests("unless_post_not",
@@ -1527,15 +1527,15 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("dregx_interp",
             "Ruby"         => "/#\{@rakefile}/",
-            "ParseTree"    => s(:dregx, '', s(:evstr, s(:ivar, :@rakefile))))
+            "ParseTree"    => s(:dregx, "", s(:evstr, s(:ivar, :@rakefile))))
 
   add_tests("dregx_interp_empty",
             "Ruby"         => "/a#\{}b/",
-            "ParseTree"    => s(:dregx, 'a', s(:evstr), s(:str, "b")))
+            "ParseTree"    => s(:dregx, "a", s(:evstr), s(:str, "b")))
 
   add_tests("dregx_n",
             "Ruby"         => '/#{1}/n',
-            "ParseTree"    => s(:dregx, '',
+            "ParseTree"    => s(:dregx, "",
                                 s(:evstr, s(:lit, 1)), /x/n.options))
 
   add_tests("dregx_once",
@@ -1547,7 +1547,7 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("dregx_once_n_interp",
             "Ruby"         => "/#\{IAC}#\{SB}/no",
-            "ParseTree"    => s(:dregx_once, '',
+            "ParseTree"    => s(:dregx_once, "",
                                 s(:evstr, s(:const, :IAC)),
                                 s(:evstr, s(:const, :SB)), /x/n.options))
 
@@ -1617,7 +1617,7 @@ class ParseTreeTestCase < Minitest::Test
   add_tests("dstr_heredoc_windoze_sucks",
             "Ruby"         => "<<-EOF\r\ndef test_#\{action}_valid_feed\r\n  EOF\r\n",
             "ParseTree"    => s(:dstr,
-                                'def test_',
+                                "def test_",
                                 s(:evstr, s(:call, nil, :action)),
                                 s(:str, "_valid_feed\n")),
             "Ruby2Ruby"    => "\"def test_#\{action}_valid_feed\\n\"")
@@ -1674,7 +1674,7 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "t = 5\n`touch #\{t}`\n",
             "ParseTree"    => s(:block,
                                 s(:lasgn, :t, s(:lit, 5)),
-                                s(:dxstr, 'touch ', s(:evstr, s(:lvar, :t)))))
+                                s(:dxstr, "touch ", s(:evstr, s(:lvar, :t)))))
 
   add_tests("ensure",
             "Ruby"         => "begin\n  (1 + 1)\nrescue SyntaxError => e1\n  2\nrescue Exception => e2\n  3\nelse\n  4\nensure\n  5\nend",
@@ -2157,7 +2157,7 @@ class ParseTreeTestCase < Minitest::Test
             "ParseTree"    => s(:lit, /x/))
 
   add_tests("lit_regexp_i_wwtt",
-            "Ruby"         => 'str.split(//i)',
+            "Ruby"         => "str.split(//i)",
             "ParseTree"    => s(:call,
                                 s(:call, nil, :str),
                                 :split,
@@ -2362,7 +2362,7 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:call,
                                     s(:call, nil, :d),
                                     :e,
-                                    s(:str, 'f')))))
+                                    s(:str, "f")))))
 
   add_tests("match",
             "Ruby"         => "1 if /x/",
@@ -3076,7 +3076,7 @@ class ParseTreeTestCase < Minitest::Test
 
   add_tests("xstr",
             "Ruby"         => "`touch 5`",
-            "ParseTree"    => s(:xstr, 'touch 5'))
+            "ParseTree"    => s(:xstr, "touch 5"))
 
   add_tests("yield_0",
             "Ruby"         => "yield",

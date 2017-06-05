@@ -9,78 +9,75 @@ if ENV["COV"]
   warn "Running simplecov"
 end
 
-require 'sexp_processor'
-require 'stringio'
-require 'minitest/autorun'
-require 'pp'
+require "sexp_processor"
+require "strict_sexp" if ENV["STRICT_SEXP"]
+require "stringio"
+require "minitest/autorun"
+require "pp"
 
 # Fake test classes:
 
 class TestProcessor < SexpProcessor # ZenTest SKIP
   attr_accessor :auto_shift_type
 
-  def process_acc1(exp)
+  def process_acc1 exp
     out = self.expected.new(:acc2, exp.thing_three, exp.thing_two, exp.thing_one)
     exp.clear
-    return out
+    out
   end
 
-  def process_acc2(exp)
+  def process_acc2 exp
     out = s()
     out << exp.thing_one
   end
 
-  def process_specific(exp)
+  def process_specific exp
     _ = exp.shift
     result = s(:blah)
-    until exp.empty?
-      result.push process(exp.shift)
-    end
+    result.push process(exp.shift) until exp.empty?
     result
   end
 
-  def process_strip(exp)
+  def process_strip exp
     result = exp.deep_clone
     exp.clear
     result
   end
 
-  def process_nonempty(exp)
+  def process_nonempty exp
     s(*exp)
   end
 
-  def process_broken(exp)
+  def process_broken exp
     result = [*exp]
     exp.clear
     result
   end
 
-  def process_expected(exp)
+  def process_expected exp
     exp.clear
-    return {}
+    {}
   end
 
-  def process_string(exp)
-    return exp.shift
+  def process_string exp
+    exp.shift
   end
 
-  def rewrite_rewritable(exp) # (a b c) => (a c b)
-    return s(exp.shift, exp.pop, exp.shift)
+  def rewrite_rewritable exp # (a b c) => (a c b)
+    s(exp.shift, exp.pop, exp.shift)
   end
 
-  def process_rewritable(exp)
+  def process_rewritable exp
     @n ||= 0
     exp.shift # name
     result = s(:rewritten)
-    until exp.empty?
-      result.push process(exp.shift)
-    end
+    result.push process exp.shift until exp.empty?
     result.push @n
     @n += 1
     result
   end
 
-  def rewrite_major_rewrite(exp)
+  def rewrite_major_rewrite exp
     exp.sexp_type = :rewritable
     exp
   end
@@ -92,7 +89,7 @@ class TestProcessorDefault < SexpProcessor # ZenTest SKIP
     self.default_method = :def_method
   end
 
-  def def_method(exp)
+  def def_method exp
     exp.clear
     self.expected.new(42)
   end
@@ -158,7 +155,8 @@ class TestSexpProcessor < Minitest::Test
       @processor.process(s(:blah, 1, 2, 3))
     end
   end
-  def test_strict=; skip; end #Handled
+
+  def test_strict=; skip; end # handled
 
   def test_require_empty_false
     @processor.require_empty = false
@@ -171,6 +169,7 @@ class TestSexpProcessor < Minitest::Test
       @processor.process(s(:nonempty, 1, 2, 3))
     end
   end
+
   def test_require_empty=; skip; end # handled
 
   def test_process_strip
@@ -265,6 +264,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.auto_shift_type = true
     assert_equal(true, @processor.auto_shift_type)
   end
+
   def test_auto_shift_type_equal; skip; end # handled
 
   def test_default_method
@@ -273,6 +273,7 @@ class TestSexpProcessor < Minitest::Test
     @processor.default_method = :something
     assert_equal :something, @processor.default_method
   end
+
   def test_default_method=; skip; end # handled
 
   def test_expected
@@ -293,6 +294,7 @@ class TestSexpProcessor < Minitest::Test
 
     @processor.process(s(:expected))        # shouldn't raise
   end
+
   def test_expected=; skip; end # handled
 
   # Not Testing:
@@ -332,7 +334,7 @@ class TestMethodBasedSexpProcessor < Minitest::Test
 
     assert_empty processor.method_stack
 
-    expected = {"main#xxx" => "file.rb:42"}
+    expected = { "main#xxx" => "file.rb:42" }
     assert_equal expected, processor.method_locations
   end
 
@@ -345,7 +347,7 @@ class TestMethodBasedSexpProcessor < Minitest::Test
 
     assert_empty processor.method_stack
 
-    expected = {"main#xxx" => "file.rb:42-44"}
+    expected = { "main#xxx" => "file.rb:42-44" }
     assert_equal expected, processor.method_locations
   end
 

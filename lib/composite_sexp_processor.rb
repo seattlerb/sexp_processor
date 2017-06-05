@@ -1,4 +1,4 @@
-require 'sexp_processor'
+require "sexp_processor"
 
 ##
 # Implements the Composite pattern on SexpProcessor. Need we say more?
@@ -24,7 +24,7 @@ class CompositeSexpProcessor < SexpProcessor
   ##
   # Add a +processor+ to the list of processors to run.
 
-  def <<(processor)
+  def << processor
     raise ArgumentError, "Can only add sexp processors" unless
       SexpProcessor === processor || processor.respond_to?(:process)
     @processors << processor
@@ -34,14 +34,14 @@ class CompositeSexpProcessor < SexpProcessor
   # Run +exp+ through all of the processors, returning the final
   # result.
 
-  def process(exp)
+  def process exp
     @processors.each do |processor|
       exp = processor.process(exp)
     end
     exp
   end
 
-  def on_error_in(node_type, &block)
+  def on_error_in node_type, &block
     @processors.each do |processor|
       processor.on_error_in(node_type, &block)
     end
