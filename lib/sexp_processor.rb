@@ -177,7 +177,7 @@ class SexpProcessor
     end
 
     in_context type do
-      exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
+      exp = exp.map { |sub| Array === sub ? rewrite(sub) : sub }
     end
 
     loop do
@@ -253,16 +253,16 @@ class SexpProcessor
 
         exp.shift if @auto_shift_type and meth != @default_method
 
-        result = error_handler(type, exp_orig) do
-          self.send(meth, exp)
-        end
+        result = error_handler(type, exp_orig) {
+          self.send meth, exp
+        }
 
         if @debug.key? type then
           str = exp.inspect
           puts "// DEBUG (processed): #{str}" if str =~ @debug[type]
         end
 
-        raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless
+        raise SexpTypeError, "Result of #{type} must be a #{@expected}, was #{result.class}:#{result.inspect}" unless
           @expected === result
 
         self.assert_empty(meth, exp, exp_orig) if @require_empty
@@ -314,6 +314,8 @@ class SexpProcessor
 
     warn "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if
       $DEBUG
+
+    raise
   end
 
   ##

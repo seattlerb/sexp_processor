@@ -20,6 +20,12 @@ require "pp"
 class TestProcessor < SexpProcessor # ZenTest SKIP
   attr_accessor :auto_shift_type
 
+  def initialize
+    super
+    self.require_empty = false
+    self.auto_shift_type = false
+  end
+
   def process_acc1 exp
     out = self.expected.new(:acc2, exp.thing_three, exp.thing_two, exp.thing_one)
     exp.clear
@@ -32,16 +38,12 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_specific exp
-    _ = exp.shift
-    result = s(:blah)
-    result.push process(exp.shift) until exp.empty?
-    result
+    _, *data = exp
+    s(:blah, *data.map { |x| process x })
   end
 
   def process_strip exp
-    result = exp.deep_clone
-    exp.clear
-    result
+    exp.deep_clone
   end
 
   def process_nonempty exp
@@ -64,16 +66,17 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def rewrite_rewritable exp # (a b c) => (a c b)
-    s(exp.shift, exp.pop, exp.shift)
+    a, b, c = exp
+    s(a, c, b)
   end
 
   def process_rewritable exp
+    _, *data = exp
+
     @n ||= 0
-    exp.shift # name
-    result = s(:rewritten)
-    result.push process exp.shift until exp.empty?
-    result.push @n
+    result = s(:rewritten, *data.map { |x| process x }, @n)
     @n += 1
+
     result
   end
 
@@ -166,6 +169,7 @@ class TestSexpProcessor < Minitest::Test
 
   def test_require_empty_true
     assert_raises NotEmptyError do
+      @processor.require_empty = true
       @processor.process(s(:nonempty, 1, 2, 3))
     end
   end
@@ -197,7 +201,6 @@ class TestSexpProcessor < Minitest::Test
     expect = s(:rewritable, 2, 1)
     result = @processor.rewrite(insert)
     assert_equal(expect, result)
-    assert_equal(s(2), insert) # post-processing
   end
 
   def test_process_rewrite

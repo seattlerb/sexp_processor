@@ -86,7 +86,7 @@ class Sexp
   nuke_method :collect!, 4
   nuke_method :compact!, 4
   nuke_method :flatten!, 4
-  # nuke_method :map!,     4
+  nuke_method :map!,     4
   nuke_method :reject!,  4
   nuke_method :reverse!, 4
   nuke_method :rotate!,  4

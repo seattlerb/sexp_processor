@@ -179,7 +179,6 @@ class TestSexp < SexpTestCase # ZenTest FULL
   def test_array_type_eh
     capture_io do # HACK
       assert_equal false, s(:lit, 42).array_type?
-      @sexp.unshift :array
       assert_equal true, s(:array, 42).array_type?
     end
   end
@@ -231,8 +230,6 @@ class TestSexp < SexpTestCase # ZenTest FULL
     refute_equal3 s(:a, :b),                s(:a)
     refute_equal3 s(:a1, :b),               s(:a2, :b)
     refute_equal3 s(:a, :b1),               s(:a, :b2)
-    refute_equal3 @basic_sexp,              @basic_sexp.dup.push(42)
-    refute_equal3 @basic_sexp.dup.push(42), @basic_sexp
   end
 
   def test_equal3_subset_match

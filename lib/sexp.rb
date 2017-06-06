@@ -39,6 +39,10 @@ class Sexp < Array # ZenTest FULL
              })
   end
 
+  def map &blk # :nodoc:
+    s(*super(&blk)) # ensures a sexp from map
+  end
+
   def == obj # :nodoc:
     obj.class == self.class and super # only because of a bug in ruby
   end
