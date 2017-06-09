@@ -1,6 +1,7 @@
 # encoding: US-ASCII
 
 $TESTING = true
+# :stopdoc:
 
 require "minitest/test"
 require "sexp_processor" # for deep_clone
@@ -3118,3 +3119,5 @@ class ParseTreeTestCase < Minitest::Test
 #   end
 
 end
+
+# :startdoc:

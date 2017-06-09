@@ -1,3 +1,5 @@
+# :stopdoc:
+
 ##
 # I'm starting to warm up to this idea!
 # ENV["STRICT_SEXP"] turns on various levels of conformance checking
@@ -31,6 +33,7 @@
 # 4 = sexp.unshift    => no
 # 4 = sexp.push       => no
 # 4 = sexp.pop        => no
+# 4 = sexp <<         => no
 
 class Sexp
   alias :safe_idx   :[]
@@ -81,13 +84,15 @@ class Sexp
     raise "use sexp_type"
   end
 
-  nuke_method :replace,  4
-  nuke_method :concat,   4
   nuke_method :collect!, 4
   nuke_method :compact!, 4
+  nuke_method :concat,   4
   nuke_method :flatten!, 4
   nuke_method :map!,     4
+  nuke_method :pop,      4
+  nuke_method :push,     4
   nuke_method :reject!,  4
+  nuke_method :replace,  4
   nuke_method :reverse!, 4
   nuke_method :rotate!,  4
   nuke_method :select!,  4
@@ -97,8 +102,8 @@ class Sexp
   nuke_method :sort_by!, 4
   nuke_method :uniq!,    4
   nuke_method :unshift,  4
-  nuke_method :push,     4
-  nuke_method :pop,      4
+  nuke_method :<<,       5
+  nuke_method :shift,    5
 
   def sexp_type
     safe_idx 0
@@ -116,3 +121,5 @@ class Sexp
     self.safe_asgn 1..-1, v
   end
 end unless Sexp.new.respond_to? :safe_asgn if ENV["STRICT_SEXP"]
+
+# :startdoc:

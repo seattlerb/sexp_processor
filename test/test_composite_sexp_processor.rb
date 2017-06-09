@@ -9,14 +9,13 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
     super
     self.warn_on_default = false
     self.default_method = :default_processor
+    self.require_empty = false
     self.expected = Array
   end
 
   def default_processor exp
-    result = s()
-    result << exp.shift
-    result << "#{exp.shift} woot" until exp.empty?
-    result
+    t, *rest = exp
+    s(t, *rest.map { |s| "#{s} woot" })
   end
 end
 

@@ -34,7 +34,7 @@ end
 class SexpTestCase < Minitest::Test
   M  = Sexp::Matcher
   MC = Sexp::MatchCollection
-  MR = Sexp::MatchResult
+  MR = Sexp # ::MatchResult
 
   CLASS_SEXP = s(:class, :cake, nil,
                  s(:defn, :foo, s(:args), s(:add, :a, :b)),
@@ -475,6 +475,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_shift
+    skip_if_strict 5
+
     skip "https://github.com/MagLev/maglev/issues/250" if maglev?
 
     assert_equal(1, @sexp.shift)
@@ -657,6 +659,9 @@ class TestSexpMatcher < SexpTestCase
   def test_cls_m
     assert_equal M::Pattern.new(/a/), s{ m(/a/) }
     assert_equal M::Pattern.new(/\Aa\Z/), s{ m(:a) }
+    assert_equal M::Pattern.new(/test_\w/), s{ m(/test_\w/) }
+    re = Regexp.union [/\w/, /\d/]
+    assert_equal M::Pattern.new(re), s{ m(/\w/,/\d/) }
   end
 
   def test_amp
@@ -915,6 +920,14 @@ class TestPattern < MatcherTestCase
     sexp = CLASS_SEXP.dup
 
     assert_search 2, sexp, s{ s(m(/\w{3}/), :a, :b) }
+
+    assert_search 0, s(:a), s{   m(/\w/) }
+    assert_search 1, s(:a), s{ s(m(/\w/)) }
+    assert_search 0, s(:a), s{   m(/\w/,/\d/) }
+    assert_search 1, s(:a), s{ s(m(/\w/,/\d/)) }
+
+    assert_search 0, s(:tests, s(s(:test_a), s(:test_b))), s{   m(/test_\w/) }
+    assert_search 2, s(:tests, s(s(:test_a), s(:test_b))), s{ s(m(/test_\w/)) }
   end
 end
 
@@ -1000,52 +1013,6 @@ class TestSibling < MatcherTestCase
   end
 end
 
-class TestMatchResult < SexpTestCase
-  attr_accessor :sexp, :pat, :act
-
-  def setup
-    self.sexp = s(:a, :b, :c)
-    self.pat  = s{ _ }
-    self.act  = (sexp / pat).first
-  end
-
-  def test_index
-    self.act = (s(:a, :b, :c) / s{ _ }).first
-
-    assert_equal sexp, act.sexp
-  end
-
-  def test_index_eq
-    act[:key] = :val
-
-    assert_equal :val, act[:key]
-  end
-
-  def test_to_s
-    assert_equal "MatchResult.new(s(:a, :b, :c))", act.to_s
-  end
-
-  def test_to_s_capture
-    act[:cheat] = :woot
-
-    assert_equal "MatchResult.new(s(:a, :b, :c), {:cheat=>:woot})", act.to_s
-  end
-
-  def test_inspect
-    assert_inspect "MatchResult.new(s(:a, :b, :c), {})", act
-  end
-
-  def test_pretty_print
-    assert_pretty_print "MatchResult.new(s(:a, :b, :c), {})", act
-  end
-
-  def test_sanity
-    exp = MR.new sexp
-
-    assert_equal exp, act
-  end
-end
-
 class TestMatchCollection < SexpTestCase
   attr_accessor :sexp, :pat, :act
 
@@ -1067,20 +1034,20 @@ class TestMatchCollection < SexpTestCase
     _, _, _, defn1, defn2 = sexp
 
     exp = MC.new
-    exp << MR.new(defn1.deep_clone)
-    exp << MR.new(defn2.deep_clone)
+    exp << defn1.deep_clone
+    exp << defn2.deep_clone
 
     assert_equal exp, act
   end
 
   def test_sanity
     act = sexp / pat
-    exp = MC.new << MR.new(sexp)
+    exp = MC.new << sexp
 
     assert_equal exp, act
   end
 
-  STR = "MatchCollection.new(MatchResult.new(s(:a, :b, :c), {}))"
+  STR = "MatchCollection.new(s(:a, :b, :c))"
 
   def test_to_s
     assert_equal STR, act.to_s
@@ -1122,7 +1089,7 @@ class TestSexpSearch < SexpTestCase
     act = sexp / s{ s(:class, atom, _, ___) }
 
     exp = MC.new
-    exp << MR.new(sexp.deep_clone)
+    exp << sexp.deep_clone
 
     assert_equal exp, act
   end
@@ -1131,8 +1098,8 @@ class TestSexpSearch < SexpTestCase
     act = sexp / s{ s(:defn, atom, ___) }
 
     exp = MC.new
-    exp << MR.new(s(:defn, :foo, s(:args), s(:add, :a, :b)))
-    exp << MR.new(s(:defn, :bar, s(:args), s(:sub, :a, :b)))
+    exp << s(:defn, :foo, s(:args), s(:add, :a, :b))
+    exp << s(:defn, :bar, s(:args), s(:sub, :a, :b))
 
     assert_equal exp, act
   end
@@ -1156,8 +1123,8 @@ class TestSexpSearch < SexpTestCase
     _, _, _, defn1, defn2 = sexp
 
     mc = []
-    mc << MR.new(defn1)
-    mc << MR.new(defn2)
+    mc << defn1.deep_clone
+    mc << defn2.deep_clone
 
     assert_equal mc, sexp.search_each(s{t(:defn)}).map(&:itself)
   end
@@ -1219,7 +1186,7 @@ class TestSexpReplaceSexp < SexpTestCase
   def test_replace_sexp_yields_match_result
     sexp = s(:a, s(:b), :c)
 
-    exp = M::MatchResult.new(sexp)
+    exp = sexp.deep_clone
 
     sexp.replace_sexp(s{ t(:a) }) { |x|
       assert_equal exp, x
@@ -1237,7 +1204,7 @@ class TestSexpReplaceSexp < SexpTestCase
   def test_search_each_yields_match_result
     sexp = s(:a, s(:b), :c)
 
-    exp = M::MatchResult.new(sexp)
+    exp = sexp.deep_clone
 
     sexp.search_each(s{ t(:a) }) { |x|
       assert_equal exp, x

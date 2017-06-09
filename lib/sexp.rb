@@ -1,7 +1,5 @@
 $TESTING ||= false # unless defined $TESTING
 
-require "forwardable"
-
 ##
 # Sexps are the basic storage mechanism of SexpProcessor.  Sexps have
 # a +type+ (to be renamed +node_type+) which is the first element of
@@ -9,8 +7,20 @@ require "forwardable"
 # dispatch the Sexp to for processing.
 
 class Sexp < Array # ZenTest FULL
+  ##
+  # A setter for the line this sexp was found on. Usually set by ruby_parser.
+
   attr_writer :line
-  attr_accessor :file, :comments
+
+  ##
+  # Accessors for the file. Usually set by ruby_parser.
+
+  attr_accessor :file
+
+  ##
+  # Optional comments above/aside this sexp. Usually set by ruby_parser.
+
+  attr_accessor :comments
 
   @@array_types = [ :array, :args ] # TODO: remove
 
@@ -160,7 +170,7 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
-  def find_node name, delete = false
+  def find_node name, delete = false # :nodoc:
     matches = find_nodes name
 
     case matches.size
@@ -289,11 +299,7 @@ class Sexp < Array # ZenTest FULL
       warn "NOTE: form s(s(:subsexp)).structure is deprecated. Removing in 5.0"
       s(:bogus, *self).structure # TODO: remove >= 4.2.0
     else
-      result = s(self.sexp_type)
-      self.each do |subexp|
-        result << subexp.structure if Sexp === subexp
-      end
-      result
+      s(self.sexp_type, *each_sexp.map(&:structure))
     end
   end
 
@@ -334,9 +340,7 @@ class Sexp < Array # ZenTest FULL
     self.map { |o| Sexp === o ? o.to_a : o }
   end
 
-  def to_s # :nodoc:
-    inspect
-  end
+  alias to_s inspect # :nodoc:
 end
 
 ##
@@ -348,32 +352,27 @@ def s *args, &blk
 end
 
 ##
-# Extends Sexp w/ matchy stuff
+# Extends Sexp w/ matchy stuff.
 #
 # For example here is a Sexp query that looks for s(:a):
 #
-#   query = s { s(:a) }
+#   query = s{ s(:a) }
 #
 # A more interesting query might look for classes with names starting
 # in Test:
 #
-#   query = s { s(:class, m(/^Test\w+/ % 'name', _, _)) }
+#   query = s{ s(:class, m(/^Test/), _, ___) }
 #
-# This makes use of a Sexp::Matcher::Pattern, two Sexp::Matcher::Wild
-# matchers and Sexp::Traverse#capture_as for capturing the name to a
-# variable 'name'.
+# This makes use of a Sexp::Matcher::Pattern, a Sexp::Matcher::Wild
+# matcher, and a Sexp::Matcher::Remaining pattern.
 #
 # For more examples, see the various Sexp class methods, the examples,
 # and the tests supplied with Sexp.
 
 class Sexp
-  # def !@ # TODO? I dunno, needs to convert s -> q?
-  #   Sexp::Matcher::Not.new self
-  # end
-
   ##
-  # Searches for the +pattern+ returning a SexpCollection containing
-  # a SexpResult for each match.
+  # Searches for the +pattern+ returning a MatchCollection containing
+  # a MatchResult for each match.
   #
   # Example:
   #   s(:a, s(:b)) / Q{ s(:b) } => [s(:b)]
@@ -384,16 +383,16 @@ class Sexp
   end
 
   ##
-  # Searches for the +pattern+ yielding a SexpResult for each match.
+  # Searches for the +pattern+ yielding a MatchResult for each match.
 
-  def search_each pattern, &block
+  def search_each pattern, &block # TODO: rename to grep?
     raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
     return enum_for(:search_each, pattern) unless block_given?
 
     if pattern.satisfy? self then
-      res = MatchResult.new self
-      yield res
+      # res = MatchResult.new self
+      yield self
     end
 
     self.each_sexp do |subset|
@@ -401,18 +400,18 @@ class Sexp
     end
   end
 
-  ##
-  # Searches for the +pattern+ yielding a SexpResult
-  # for each match, and replacing it with the result of
-  # the block.
+  def sexp # HACK
+    self
+  end
 
-  def replace_sexp pattern, &block # TODO: rename to gsub
+  ##
+  # Searches for the +pattern+ yielding a MatchResult for each match,
+  # and replacing it with the result of the block.
+
+  def replace_sexp pattern, &block # TODO: rename to gsub?
     raise ArgumentError, "Needs a pattern" unless pattern.kind_of? Matcher
 
-    if pattern.satisfy? self then
-      res = Sexp::MatchResult.new self
-      return yield res
-    end
+    return yield self if pattern.satisfy? self
 
     self.class.new(*self.map { |subset|
                      case subset
@@ -426,22 +425,31 @@ class Sexp
 
   ##
   # This is the longhand method for create a Sexp query, normally
-  # one would use s { ... }, however it is also possible to do:
+  # one would use s{ ... }, however it is also possible to do:
   #
-  #   Sexp.q { s() }
+  #   Sexp.q { ... }
+  #
+  # or:
+  #
+  #   Sexp.q(...)
+  #
+  # See Matcher and other factory class methods here.
 
   def self.q *args, &block
     return class_eval(&block) if block
-    Matcher.new(*args)
+    s(*args)
   end
 
   ##
   # Matches an S-Expression.
   #
-  # example
-  #   s(:a) / s { s(:a) }        #=> [m(:a)]
-  #   s(:a) / s { s() }          #=> []
-  #   s(:a, s(:b)) / s { s(:b) } #=> [m(:b)]
+  # examples:
+  #
+  #   s(:a) / s{ s(:a) }        #=> [m(:a)]
+  #   s(:a) / s{ s() }          #=> []
+  #   s(:a, s(:b)) / s{ s(:b) } #=> [m(:b)]
+  #
+  # See Matcher.
 
   def self.s *args
     Matcher.new(*args)
@@ -450,25 +458,27 @@ class Sexp
   ##
   # Matches any single item.
   #
-  # example:
-  #   s(:a) / s { _ }        #=> [s(:a)]
-  #   s(:a, s(s(:b))) / s { s(_) } #=> [s(s(:b))]
+  # examples:
+  #
+  #   s(:a) / s{ _ }              #=> [s(:a)]
+  #   s(:a, s(s(:b))) / s{ s(_) } #=> [s(s(:b))]
+  #
+  # See Wild.
 
   def self._
     Wild.new
   end
 
   ##
-  # Matches all remaining input.
+  # Matches all remaining input. If remaining comes before any other
+  # matchers, they will be ignored.
   #
-  # This is a special case pattern and has a few odd characteristics.
+  # examples:
   #
-  # - You cannot capture with +remaining+
-  # - If remaining comes before any other matchers, they will be ignored.
+  #   s(:a)         / s{ s(:a, ___ ) } #=> [s(:a)]
+  #   s(:a, :b, :c) / s{ s(:a, ___ ) } #=> [s(:a, :b, :c)]
   #
-  # example:
-  #   s(:a) / s { s(:a, ___ ) }         #=> [s(:a)]
-  #   s(:a, :b, :c) / s { s(:a, ___ ) } #=> [s(:a, :b, :c)]
+  # See Remaining.
 
   def self.___
     Remaining.new
@@ -477,9 +487,12 @@ class Sexp
   ##
   # Matches an expression or any expression that includes the child.
   #
-  # example:
-  #   s(:a, :b)   / s { include(:b) }
-  #   s(s(s(:a))) / s { include(:a) }
+  # examples:
+  #
+  #   s(:a, :b)   / s{ include(:b) } #=> [s(:a, :b)]
+  #   s(s(s(:a))) / s{ include(:a) } #=> [s(:a)]
+  #
+  # See Include.
 
   def self.include child # TODO: rename, name is generic ruby
     Include.new(child)
@@ -488,78 +501,106 @@ class Sexp
   ##
   # Matches any atom.
   #
-  # example:
-  #   s(:a) / s { s(atom) }        #=> [s(:a)]
-  #   s(:a, s(:b)) / s { s(atom) } #=> [s(:b)]
+  # examples:
+  #
+  #   s(:a) / s{ s(atom) }        #=> [s(:a)]
+  #   s(:a, s(:b)) / s{ s(atom) } #=> [s(:b)]
+  #
+  # See Atom.
 
   def self.atom
     Atom.new
   end
 
   ##
-  # Matches when any of the sub expressions match.
+  # Matches when any of the sub-expressions match.
   #
-  # example:
-  #   s(:a) / s { any(s(:a), s(:b)) } #=> [s(:a)]
-  #   s(:a) / s { any(s(:b), s(:c)) } #=> []
+  # examples:
+  #
+  #   s(:a) / s{ any(s(:a), s(:b)) } #=> [s(:a)]
+  #   s(:a) / s{ any(s(:b), s(:c)) } #=> []
+  #
+  # See Any.
 
   def self.any *args
     Any.new(*args)
   end
 
   ##
-  # Matches only when all sub expressions match
+  # Matches only when all sub-expressions match.
   #
-  # example:
-  #   s(:a) / s { all(s(:a), s(:b)) } #=> []
-  #   s(:a,:b) / s { t(:a), include(:b)) } #=> [s(:a,:b)]
+  # examples:
+  #
+  #   s(:a) / s{ all(s(:a), s(:b)) }      #=> []
+  #   s(:a,:b) / s{ t(:a), include(:b)) } #=> [s(:a,:b)]
+  #
+  # See All.
 
   def self.all *args
     All.new(*args)
   end
 
   ##
-  # Matches when sub expression does not match, see Sexp::Matcher#-@
+  # Matches when sub-expression does not match.
   #
-  # example:
-  #   s(:a) / s { is_not(s(:b)) } #=> [s(:a)]
-  #   s(:a) / s { s(is_not :a) } #=> []
+  # examples:
+  #
+  #   s(:a) / s{ not?(s(:b)) } #=> [s(:a)]
+  #   s(:a) / s{ s(not? :a) } #=> []
+  #
+  # See Not.
+  # See Sexp::Matcher#-@
 
   def self.not? arg
     Not.new arg
   end
 
   ##
-  # Matches anything that has a child matching the sub expression
+  # Matches anything that has a child matching the sub-expression
   #
   # example:
-  #   s(s(s(s(s(:a))))) / s { child(s(:a)) } #=> [s(s(s(s(s(:a)))))]
+  #
+  #   s(s(s(s(s(:a))))) / s{ child(s(:a)) } #=> [s(s(s(s(s(:a))))),
+  #                                              s(s(s(s(:a)))),
+  #                                              s(s(s(:a))),
+  #                                              s(s(:a)),
+  #                                              s(:a)]
+  #
+  # See Child.
 
   def self.child child
     Child.new child
   end
 
   ##
-  # Matches anything having the same sexp_type, which is the first value in a Sexp.
+  # Matches anything having the same sexp_type, which is the first
+  # value in a Sexp.
   #
-  # example:
-  #   s(:a, :b) / s { t(:a) } #=> [s(:a, :b)]
-  #   s(:a, :b) / s { t(:b) } #=> []
-  #   s(:a, s(:b, :c)) / s { t(:b) } #=> [s(:b, :c)]
+  # examples:
+  #
+  #   s(:a, :b) / s{ t(:a) }        #=> [s(:a, :b)]
+  #   s(:a, :b) / s{ t(:b) }        #=> []
+  #   s(:a, s(:b, :c)) / s{ t(:b) } #=> [s(:b, :c)]
+  #
+  # See Type.
 
   def self.t name
     Type.new name
   end
 
   ##
-  # Matches any atom who's string representation matches the patterns passed in.
+  # Matches any atom who's string representation matches the patterns
+  # passed in.
   #
-  # example:
-  #   s(:a) / s { m('a') } #=> [s(:a)]
-  #   s(:a) / s { m(/\w/,/\d/) } #=> [s(:a)]
-  #   s(:tests, s(s(:test_a), s(:test_b))) / s { m(/test_\w/) } #=> [s(:test_a), s(:test_b)]
+  # examples:
+  #
+  #   s(:a) / s{ m('a') }                                      #=> [s(:a)]
+  #   s(:a) / s{ m(/\w/,/\d/) }                                #=> [s(:a)]
+  #   s(:tests, s(s(:test_a), s(:test_b))) / s{ m(/test_\w/) } #=> [s(:test_a),
+  #                                                                 s(:test_b)]
+  #
 
-  def self.m * values
+  def self.m *values
     res = values.map { |value|
       case value
       when Regexp then
@@ -571,6 +612,10 @@ class Sexp
     }
     Pattern.new Regexp.union(*res)
   end
+
+  # def !@ # TODO? I dunno, needs to convert s -> q?
+  #   Sexp::Matcher::Not.new self
+  # end
 
   ##
   # This is an abstract matcher class.
@@ -605,9 +650,15 @@ class Sexp
       }
     end
 
+    ##
+    # Should +=~+ match sub-trees?
+
     def self.match_subs?
       @@match_subs
     end
+
+    ##
+    # Setter for +match_subs?+.
 
     def self.match_subs= o
       @@match_subs = o
@@ -615,15 +666,19 @@ class Sexp
 
     self.match_subs = true
 
-    def =~ o
-      raise ArgumentError, "can't both be matchers" if Matcher === o
+    ##
+    # Tree equivalent to +String#=~+, returns true if +self+ matches
+    # +sexp+ as a whole or in a sub-tree (if +match_subs?+).
 
-      self.satisfy?(o) ||
-        (self.class.match_subs? && o.each_sexp.any? { |sub| self =~ sub })
+    def =~ sexp
+      raise ArgumentError, "can't both be matchers" if Matcher === sexp
+
+      self.satisfy?(sexp) ||
+        (self.class.match_subs? && sexp.each_sexp.any? { |sub| self =~ sub })
     end
 
     alias === =~
-    # alias === satisfy?
+    # TODO?: alias === satisfy?
 
     def / sexp
       raise ArgumentError, "can't both be matchers" if Matcher === sexp
@@ -673,6 +728,9 @@ class Sexp
       Sibling.new(self, other)
     end
 
+    ##
+    # Is this matcher greedy? Defaults to false.
+
     def greedy?
       false
     end
@@ -691,6 +749,10 @@ class Sexp
       end
     end
 
+    ##
+    # Parse a lispy string representation of a matcher into a Matcher.
+    # See +Parser+.
+
     def self.parse s
       Parser.new(s).parse
     end
@@ -698,28 +760,47 @@ class Sexp
     ##
     # Converts from a lispy string to Sexp matchers in a safe manner.
     #
-    #   "(a 42 _ (c) [t x] ___)" => s { s(:a, 42, _, s(:c), t(:x), ___) }
+    #   "(a 42 _ (c) [t x] ___)" => s{ s(:a, 42, _, s(:c), t(:x), ___) }
 
     class Parser
+
+      ##
+      # The stream of tokens to parse. See #lex.
+
       attr_accessor :tokens
+
+      ##
+      # Create a new Parser instance on +s+
 
       def initialize s
         self.tokens = []
         lex s
       end
 
+      ##
+      # Converts +s+ into a stream of tokens and adds them to +tokens+.
+
       def lex s
         tokens.concat s.scan(%r%[()\[\]]|\"[^"]*\"|/[^/]*/|[\w-]+%)
       end
+
+      ##
+      # Returns the next token and removes it from the stream or raises if empty.
 
       def next_token
         raise SyntaxError, "unbalanced input" if tokens.empty?
         tokens.shift
       end
 
+      ##
+      # Returns the next token without removing it from the stream.
+
       def peek_token
         tokens.first
       end
+
+      ##
+      # Parses tokens and returns a +Matcher+ instance.
 
       def parse
         result = parse_sexp until tokens.empty?
@@ -771,24 +852,36 @@ class Sexp
         end
       end
 
+      ##
+      # Parses a balanced list of expressions and returns the
+      # equivalent matcher.
+
       def parse_list
-        result = Sexp.q
+        result = []
 
         result << parse_sexp while peek_token && peek_token != ")"
         next_token # pop off ")"
 
-        result
+        Sexp.q(*result)
       end
 
-      ALLOWED = [:t, :m, :atom]
+      ##
+      # A collection of allowed commands to convert into matchers.
+
+      ALLOWED = [:t, :m, :atom].freeze
+
+      ##
+      # Parses a balanced command. A command is denoted by square
+      # brackets and must conform to a whitelisted set of allowed
+      # commands (see +ALLOWED+).
 
       def parse_cmd
-        args = Sexp.q
-
+        args = []
         args << parse_sexp while peek_token && peek_token != "]"
         next_token # pop off "]"
 
         cmd = args.shift
+        args = Sexp.q(*args)
 
         raise SyntaxError, "bad cmd: #{cmd.inspect}" unless ALLOWED.include? cmd
 
@@ -810,7 +903,7 @@ class Sexp
       true
     end
 
-    def inspect
+    def inspect # :nodoc:
       "_"
     end
 
@@ -834,7 +927,7 @@ class Sexp
       true
     end
 
-    def inspect
+    def inspect # :nodoc:
       "___"
     end
 
@@ -847,6 +940,9 @@ class Sexp
   # See SexpQueryBuilder.any
 
   class Any < Matcher
+    ##
+    # The collection of sub-matchers to match against.
+
     attr_reader :options
 
     ##
@@ -854,10 +950,6 @@ class Sexp
 
     def initialize *options
       @options = options
-    end
-
-    def == o
-      super && self.options == o.options
     end
 
     ##
@@ -869,7 +961,11 @@ class Sexp
       }
     end
 
-    def inspect
+    def == o # :nodoc:
+      super && self.options == o.options
+    end
+
+    def inspect # :nodoc:
       options.map(&:inspect).join(" | ")
     end
 
@@ -886,11 +982,10 @@ class Sexp
   # See SexpQueryBuilder.all
 
   class All < Matcher
-    attr_reader :options
+    ##
+    # The collection of sub-matchers to match against.
 
-    def == o
-      super && self.options == o.options
-    end
+    attr_reader :options
 
     ##
     # Create an All matcher which will match all of the +options+.
@@ -908,7 +1003,11 @@ class Sexp
       }
     end
 
-    def inspect
+    def == o # :nodoc:
+      super && self.options == o.options
+    end
+
+    def inspect # :nodoc:
       options.map(&:inspect).join(" & ")
     end
 
@@ -925,6 +1024,10 @@ class Sexp
   # See SexpQueryBuilder.not
 
   class Not < Matcher
+
+    ##
+    # The value to negate in the match.
+
     attr_reader :value
 
     ##
@@ -934,7 +1037,7 @@ class Sexp
       @value = value
     end
 
-    def == o
+    def == o # :nodoc:
       super && self.value == o.value
     end
 
@@ -945,7 +1048,7 @@ class Sexp
       !(value.kind_of?(Sexp) ? value.satisfy?(o) : value == o)
     end
 
-    def inspect
+    def inspect # :nodoc:
       "not?(%p)" % [value]
     end
 
@@ -960,11 +1063,10 @@ class Sexp
   # See SexpQueryBuilder.child
 
   class Child < Matcher
-    attr_reader :child
+    ##
+    # The child to match.
 
-    def == o
-      super && self.child == o.child
-    end
+    attr_reader :child
 
     ##
     # Create a Child matcher which will match anything having a
@@ -986,7 +1088,11 @@ class Sexp
       end
     end
 
-    def inspect
+    def == o # :nodoc:
+      super && self.child == o.child
+    end
+
+    def inspect # :nodoc:
       "child(%p)" % [child]
     end
 
@@ -1022,11 +1128,17 @@ class Sexp
 
   ##
   # See SexpQueryBuilder.m
+  #
+  # TODO: maybe don't require non-sexps? This does respond to =~ now.
 
   class Pattern < Matcher
+
+    ##
+    # The regexp to match for the pattern.
+
     attr_reader :pattern
 
-    def == o
+    def == o # :nodoc:
       super && self.pattern == o.pattern
     end
 
@@ -1045,7 +1157,7 @@ class Sexp
       !o.kind_of?(Sexp) && o.to_s =~ pattern # TODO: question to_s
     end
 
-    def inspect
+    def inspect # :nodoc:
       "m(%p)" % pattern
     end
 
@@ -1070,7 +1182,7 @@ class Sexp
       @sexp_type = type
     end
 
-    def == o
+    def == o # :nodoc:
       super && self.sexp_type == o.sexp_type
     end
 
@@ -1081,7 +1193,7 @@ class Sexp
       o.kind_of?(Sexp) && o.sexp_type == sexp_type
     end
 
-    def inspect
+    def inspect # :nodoc:
       "t(%p)" % sexp_type
     end
 
@@ -1096,11 +1208,10 @@ class Sexp
   # See SexpQueryBuilder.include
 
   class Include < Matcher
-    attr_reader :value
+    ##
+    # The value that should be included in the match.
 
-    def == o
-      super && self.value == o.value
-    end
+    attr_reader :value
 
     ##
     # Creates a Matcher which will match any Sexp that contains the
@@ -1121,7 +1232,11 @@ class Sexp
       }
     end
 
-    def inspect
+    def == o # :nodoc:
+      super && self.value == o.value
+    end
+
+    def inspect # :nodoc:
       "include(%p)" % [value]
     end
 
@@ -1136,14 +1251,21 @@ class Sexp
   # See Matcher for sibling relations: <,<<,>>,>
 
   class Sibling < Matcher
-    attr_reader :subject, :sibling, :distance
 
-    def == o
-      super &&
-        self.subject  == o.subject &&
-        self.sibling  == o.sibling &&
-        self.distance == o.distance
-    end
+    ##
+    # The LHS of the matcher.
+
+    attr_reader :subject
+
+    ##
+    # The RHS of the matcher.
+
+    attr_reader :sibling
+
+    ##
+    # An optional distance requirement for the matcher.
+
+    attr_reader :distance
 
     ##
     # Creates a Matcher which will match any pair of Sexps that are siblings.
@@ -1174,7 +1296,14 @@ class Sexp
       }
     end
 
-    def inspect
+    def == o # :nodoc:
+      super &&
+        self.subject  == o.subject &&
+        self.sibling  == o.sibling &&
+        self.distance == o.distance
+    end
+
+    def inspect # :nodoc:
       "%p >> %p" % [subject, sibling]
     end
 
@@ -1212,68 +1341,11 @@ class Sexp
   end # class Sibling
 
   ##
-  # Wraps the results of a Sexp query. The matching Sexp
-  # is placed in SexpResult#sexp. Any named captures will be
-  # available with SexpResult#[].
+  # Wraps the results of a Sexp query. MatchCollection defines
+  # MatchCollection#/ so that you can chain queries.
   #
   # For instance:
-  #   res = s(:a) / s { s( _ % :name) }
-  #
-  #   res.first.sexp == s(:a)
-  #   res.first[:name] == :a
-
-  class MatchResult
-    extend Forwardable
-    def_delegators :@data, :[], :[]=, :values_at
-
-    attr_accessor :sexp
-    attr_accessor :data
-
-    def initialize sexp, data = {}
-      @sexp = sexp
-      @data = data.dup
-    end
-
-    def == o
-      self.class == o.class && self.sexp == o.sexp && self.data == o.data
-    end
-
-    ##
-    # Shortcut for querying directly against a result's
-    # Sexp.
-
-    def / pattern, d = {}
-      pattern / sexp
-    end
-
-    def to_s
-      if data.empty?
-        "MatchResult.new(%s)" % [sexp]
-      else
-        "MatchResult.new(%s, %s)" % [sexp, data]
-      end
-    end
-
-    def inspect
-      "MatchResult.new(%p, %p)" % [sexp, data]
-    end
-
-    def pretty_print q # :nodoc:
-      q.group 1, "MatchResult.new(", ")" do
-        q.pp sexp
-        q.text ", "
-        q.pp data
-      end
-    end
-  end # class MatchResult
-
-  ##
-  # Wraps the results of a Sexp query.
-  # SexpCollection defines SexpCollection#search so that you can
-  # chain queries.
-  #
-  # For instance:
-  #   res = s(:a, s(:b)) / s { s(:a,_) } / s { s(:b) }
+  #   res = s(:a, s(:b)) / s{ s(:a,_) } / s{ s(:b) }
 
   class MatchCollection < Array
     ##
@@ -1285,13 +1357,13 @@ class Sexp
       }
     end
 
-    def inspect
+    def inspect # :nodoc:
       "MatchCollection.new(%s)" % self.to_a.inspect[1..-2]
     end
 
-    alias :to_s :inspect
+    alias :to_s :inspect # :nodoc:
 
-    def pretty_print q
+    def pretty_print q # :nodoc:
       q.group 1, "MatchCollection.new(", ")" do
         q.seplist(self) {|v| q.pp v }
       end

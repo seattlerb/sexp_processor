@@ -62,7 +62,7 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_string exp
-    exp.shift
+    exp.sexp_type
   end
 
   def rewrite_rewritable exp # (a b c) => (a c b)

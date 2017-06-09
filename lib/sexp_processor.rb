@@ -33,6 +33,7 @@ require "sexp"
 
 class SexpProcessor
 
+  # duh
   VERSION = "4.9.0"
 
   ##
@@ -160,6 +161,9 @@ class SexpProcessor
     end
   end
 
+  ##
+  # Raise if +exp+ is not empty.
+
   def assert_empty meth, exp, exp_orig
     unless exp.empty? then
       msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
@@ -167,6 +171,10 @@ class SexpProcessor
       raise NotEmptyError, msg
     end
   end
+
+  ##
+  # Rewrite +exp+ using rewrite_* method for +exp+'s sexp_type, if one
+  # exists.
 
   def rewrite exp
     type = exp.sexp_type
@@ -251,7 +259,7 @@ class SexpProcessor
           warn "WARNING: Using default method #{meth} for #{type}"
         end
 
-        exp.shift if @auto_shift_type and meth != @default_method
+        exp = exp.sexp_body if @auto_shift_type and meth != @default_method # HACK
 
         result = error_handler(type, exp_orig) {
           self.send meth, exp
@@ -269,7 +277,7 @@ class SexpProcessor
       else
         unless @strict then
           until exp.empty? do
-            sub_exp = exp.shift
+            sub_exp, *exp = exp # HACK
             sub_result = nil
             if Array === sub_exp then
               sub_result = error_handler(type, exp_orig) do
@@ -282,7 +290,8 @@ class SexpProcessor
             else
               sub_result = sub_exp
             end
-            result << sub_result
+            # result << sub_result
+            result = result.class.new(*result, sub_result) # HACK
           end
 
           # NOTE: this is costly, but we are in the generic processor
@@ -365,11 +374,16 @@ class SexpProcessor
     env.scope(&block)
   end
 
+  ##
+  # Track a stack of contexts that the processor is in, pushing on
+  # +type+ yielding, and then removing the context from the stack.
+
   def in_context type
     self.context.unshift type
 
     yield
 
+  ensure
     self.context.shift
   end
 
@@ -379,14 +393,20 @@ class SexpProcessor
   # itches too much...
 
   class Environment
-    def initialize
+    def initialize #:nodoc:
       @env = []
       @env.unshift({})
     end
 
+    ##
+    # Flatten out all scopes and return all key/value pairs.
+
     def all
       @env.reverse.inject { |env, scope| env.merge scope }
     end
+
+    ##
+    # Return the current number of scopes.
 
     def depth
       @env.length
@@ -394,19 +414,33 @@ class SexpProcessor
 
     # TODO: depth_of
 
+    ##
+    # Get +name+ from env at whatever scope it is defined in, or return nil.
+
     def [] name
       hash = @env.find { |closure| closure.key? name }
       hash[name] if hash
     end
+
+    ##
+    # If +name+ exists in the env, set it to +val+ in whatever scope
+    # it is in. If it doesn't exist, set +name+ to +val+ in the
+    # current scope.
 
     def []= name, val
       hash = @env.find { |closure| closure.key? name } || current
       hash[name] = val
     end
 
+    ##
+    # Get the current/top environment.
+
     def current
       @env.first
     end
+
+    ##
+    # Create a new scope and yield to the block passed.
 
     def scope
       @env.unshift({})
@@ -426,7 +460,7 @@ end
 # AKA, an interpreter.
 
 class SexpInterpreter < SexpProcessor
-  def initialize
+  def initialize #:nodoc:
     super
 
     self.expected        = Object
@@ -445,9 +479,30 @@ class MethodBasedSexpProcessor < SexpProcessor
   @@no_class  = :main
   @@no_method = :none
 
-  attr_reader :class_stack, :method_stack, :sclass, :method_locations
+  ##
+  # A stack of the classes/modules that are being processed
 
-  def initialize
+  attr_reader :class_stack
+
+  ##
+  # A stack of the methods that are being processed. You'd think it'd
+  # only ever be 1 deep, but you'd be wrong. People do terrible things
+  # in/to ruby.
+
+  attr_reader :method_stack
+
+  ##
+  # A stack of the singleton classes that are being processed.
+
+  attr_reader :sclass
+
+  ##
+  # A lookup table of all the method locations that have been
+  # processed so far.
+
+  attr_reader :method_locations
+
+  def initialize #:nodoc:
     super
     @sclass              = []
     @class_stack         = []
@@ -654,7 +709,7 @@ class MethodBasedSexpProcessor < SexpProcessor
   end
 end
 
-class Object
+class Object # :nodoc:
 
   ##
   # deep_clone is the usual Marshalling hack to make a deep copy.
