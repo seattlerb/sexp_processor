@@ -247,12 +247,12 @@ class TestSexp < SexpTestCase # ZenTest FULL
     e = assert_raises ArgumentError do
       s(:b) =~ s(:a, s(:b), :c)
     end
-    assert_equal "Not a pattern", e.message
+    assert_equal "Not a pattern: s(:a, s(:b), :c)", e.message
 
     e = assert_raises ArgumentError do
       s(:a, s(:b), :c) =~ s(:b)
     end
-    assert_equal "Not a pattern", e.message
+    assert_equal "Not a pattern: s(:b)", e.message
   end
 
   def test_equalstilde_plain
@@ -263,7 +263,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
       s(:re) =~ s(:data)    # no pattern
     end
 
-    assert_equal "Not a pattern", e.message
+    assert_equal "Not a pattern: s(:data)", e.message
   end
 
   def test_find_and_replace_all
@@ -617,7 +617,7 @@ end # TestSexp
 
 class TestSexpMatcher < SexpTestCase
   def test_cls_s
-    assert_equal M.q(:x), s{ s(:x) }
+    assert_equal M.s(:x), s{ s(:x) }
   end
 
   def test_cls_underscore
@@ -637,19 +637,19 @@ class TestSexpMatcher < SexpTestCase
   end
 
   def test_cls_any
-    assert_equal M::Any.new(M.q(:a), M.q(:b)), s{ any(s(:a), s(:b)) }
+    assert_equal M::Any.new(M.s(:a), M.s(:b)), s{ any(s(:a), s(:b)) }
   end
 
   def test_cls_all
-    assert_equal M::All.new(M.q(:a), M.q(:b)), s{ all(s(:a), s(:b)) }
+    assert_equal M::All.new(M.s(:a), M.s(:b)), s{ all(s(:a), s(:b)) }
   end
 
   def test_cls_not_eh
-    assert_equal M::Not.new(M.q(:a)), s{ not?(s(:a)) }
+    assert_equal M::Not.new(M.s(:a)), s{ not?(s(:a)) }
   end
 
   def test_cls_child
-    assert_equal M::Child.new(M.q(:a)), s{ child(s(:a)) }
+    assert_equal M::Child.new(M.s(:a)), s{ child(s(:a)) }
   end
 
   def test_cls_t
@@ -666,24 +666,24 @@ class TestSexpMatcher < SexpTestCase
 
   def test_amp
     m = s{ s(:a) & s(:b) }
-    e = M::All.new(M.q(:a), M.q(:b))
+    e = M::All.new(M.s(:a), M.s(:b))
 
     assert_equal e, m
   end
 
   def test_pipe
     m = s{ s(:a) | s(:b) }
-    e = M::Any.new(M.q(:a), M.q(:b))
+    e = M::Any.new(M.s(:a), M.s(:b))
 
     assert_equal e, m
   end
 
   def test_unary_minus
-    assert_equal M::Not.new(M.q(:a)), s{ -s(:a) }
+    assert_equal M::Not.new(M.s(:a)), s{ -s(:a) }
   end
 
   def test_rchevron
-    assert_equal M::Sibling.new(M.q(:a), M.q(:b)), s{ s(:a) >> s(:b) }
+    assert_equal M::Sibling.new(M.s(:a), M.s(:b)), s{ s(:a) >> s(:b) }
   end
 
   def test_greedy_eh
@@ -1110,7 +1110,7 @@ class TestSexpSearch < SexpTestCase
     _, _, (_klass, _, _, _setup, t1, t2, t3) = TestUseCase.sexp.deep_clone
     exp = [t1, t2, t3]
 
-    assert_equal exp, (TestUseCase.sexp.deep_clone / pat).map(&:sexp)
+    assert_equal exp, TestUseCase.sexp.deep_clone / pat
   end
 
   def test_search_each_no_block
@@ -1246,7 +1246,7 @@ class TestUseCase < SexpTestCase
   def test_finding_classes_and_methods
     res = @sexp / s{ s(:class, atom, ___ ) }
 
-    _klass, name, * = res.first.sexp
+    _klass, name, * = res.first
 
     assert_equal 1, res.length
     assert_equal :ExampleTest, name
@@ -1261,7 +1261,7 @@ class TestUseCase < SexpTestCase
 
     _, _, (_klass, _, _, _setup, _t1, t2, _t3) = TestUseCase.sexp.deep_clone
 
-    assert_equal [t2], res.map(&:sexp)
+    assert_equal [t2], res
   end
 
   def test_search_each_finding_duplicate_test_names
@@ -1269,7 +1269,7 @@ class TestUseCase < SexpTestCase
     counts = Hash.new { |h, k| h[k] = 0 }
 
     @sexp.search_each pat do |x|
-      _, name, * = x.sexp
+      _, name, * = x
       counts[name] += 1
     end
 
@@ -1285,10 +1285,10 @@ class TestUseCase < SexpTestCase
     _, _, (_klass, _, _, _setup, t1, t2, t3) = TestUseCase.sexp.deep_clone
     exp = [t1, t2, t3]
 
-    assert_equal exp, res.map(&:sexp)
+    assert_equal exp, res
 
     res.each do |m|
-      _, name, * = m.sexp
+      _, name, * = m
       counts[name] += 1
     end
 
@@ -1301,7 +1301,7 @@ class TestUseCase < SexpTestCase
     expected = s{ s(:const, "Minitest::Test") }
 
     new_sexp = @sexp.replace_sexp(colon2) { |r|
-      (_, (_, a), b) = r.sexp
+      (_, (_, a), b) = r
       s(:const, "%s::%s" % [a, b])
     }
 

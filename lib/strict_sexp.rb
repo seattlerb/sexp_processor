@@ -40,6 +40,7 @@ class Sexp
   alias :safe_asgn  :[]=
   alias :sexp_type= :sexp_type=
   alias :sexp_body= :sexp_body=
+  alias :shift :shift
 
   def self.nuke_method name, level
     define_method name do |*args|
@@ -62,11 +63,11 @@ class Sexp
   end if __strict > 2
 
   def [] i
+    raise "no idx: #{inspect}[#{i}]" if __strict > 2
+    raise "no idx>1: #{inspect}[#{i}]" if Integer === i && i > 1 if __strict > 1
     raise "use sexp_type" if i == 0
     raise "use sexp_body" if i == (1..-1)
     raise "use last" if i == -1
-    raise "no idx>1: #{inspect}[#{i}]" if Integer === i && i > 1 if __strict > 1
-    raise "no idx: #{inspect}[#{i}]" if __strict > 2
     self.safe_idx i
   end
 

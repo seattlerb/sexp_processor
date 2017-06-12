@@ -179,6 +179,8 @@ class SexpProcessor
   def rewrite exp
     type = exp.sexp_type
 
+    comments = exp.comments
+
     if @debug.key? type then
       str = exp.inspect
       puts "// DEBUG (original ): #{str}" if str =~ @debug[type]
@@ -201,6 +203,8 @@ class SexpProcessor
       old_type, type = type, exp.sexp_type
       break if old_type == type
     end
+
+    exp.comments = comments
 
     exp
   end
@@ -285,7 +289,7 @@ class SexpProcessor
               end
               raise "Result is a bad type" unless Array === sub_exp
               raise "Result does not have a type in front: #{sub_exp.inspect}" unless
-                Symbol === sub_exp.first unless
+                Symbol === sub_exp.sexp_type unless
                 sub_exp.empty?
             else
               sub_result = sub_exp
@@ -593,7 +597,7 @@ class MethodBasedSexpProcessor < SexpProcessor
 
   ##
   # Process a class node until empty. Tracks all nesting. If you have
-  # to subclass and override this method, you can clall super with a
+  # to subclass and override this method, you can call super with a
   # block.
 
   def process_class exp
