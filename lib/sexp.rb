@@ -271,7 +271,7 @@ class Sexp < Array # ZenTest FULL
   # the values without the node type.
 
   def sexp_body from = 1
-    self[from..-1]
+    self.new(*self[from..-1])
   end
 
   ##
