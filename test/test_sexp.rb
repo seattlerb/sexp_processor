@@ -142,6 +142,10 @@ class TestSexp < SexpTestCase # ZenTest FULL
     @processor = SexpProcessor.new
     @sexp = @sexp_class.new(1, 2, 3)
     @basic_sexp = s(:lasgn, :var, s(:lit, 42).line(1)).line(1)
+    @basic_sexp.each_sexp do |s|
+      s.file = "file.rb"
+    end
+
     @complex_sexp = s(:block,
                       s(:lasgn, :foo, s(:str, "foo").line(1)).line(1),
                       s(:if, s(:and, s(:true).line(2), s(:lit, 1).line(2)).line(2),
@@ -352,6 +356,54 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_nil @sexp.line_max
     assert_equal 1, @basic_sexp.line_max
     assert_equal 5, @complex_sexp.line_max
+  end
+
+  def test_new
+    file = "file.rb"
+
+    old = s(:lasgn, :var, s(:lit, 42).line(2)).line(1)
+    old.file = file
+    old.each_sexp do |x|
+      x.file = file
+    end
+    old.comments = "do the thing"
+
+    assert_same file, old.file
+    assert_equal 1, old.line
+    assert_same file, old.last.file
+    assert_equal 2, old.last.line
+
+    new = old.new(1, 2, 3)
+
+    assert_equal s(1, 2, 3), new
+
+    assert_same file, new.file
+    assert_equal 1, new.line
+    assert_same old.comments, new.comments
+  end
+
+  def test_map
+    file = "file.rb"
+
+    old = s(:lasgn, :var, s(:lit, 42).line(2)).line(1)
+    old.file = file
+    old.each_sexp do |x|
+      x.file = file
+    end
+    old.comments = "do the thing"
+
+    assert_same file, old.file
+    assert_equal 1, old.line
+    assert_same file, old.last.file
+    assert_equal 2, old.last.line
+
+    new = old.map(&:itself)
+
+    assert_same file,         new.file
+    assert_equal 1,           new.line
+    assert_same file,         new.last.file
+    assert_equal 2,           new.last.line
+    assert_same old.comments, new.comments
   end
 
   def test_mass
