@@ -54,7 +54,7 @@ class Sexp < Array # ZenTest FULL
   # same +file+, +line+, and +comment+ as self.
 
   def new(*body)
-    r = s(*body) # ensures a sexp from map
+    r = self.class.new(*body) # ensures a sexp from map
     r.file     = self.file     if self.file
     r.line     = self.line     if self.line
     r.comments = self.comments if self.comments
