@@ -1410,3 +1410,5 @@ class Sexp #:nodoc:
     end
   end # class MatchCollection
 end
+
+require "strict_sexp" if ENV["STRICT_SEXP"].to_i > 0
