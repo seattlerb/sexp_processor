@@ -15,20 +15,49 @@ for your language processing pleasure.
 
   * Allows you to write very clean filters.
 
+* Includes MethodBasedSexpProcessor
+
+  * Makes writing language processors even easier!
+
 * Sexp provides a simple and clean interface to creating and manipulating ASTs.
+
+  * Includes new pattern matching system.
 
 == SYNOPSIS:
 
-  class MyProcessor < SexpProcessor
-    def initialize
-      super
-      self.strict = false
+You can use SexpProcessor to do all kinds of language processing. Here
+is a simple example of a simple documentation printer:
+
+  class ArrrDoc < MethodBasedSexpProcessor
+    def process_class exp
+      super do
+        puts "#{self.klass_name}: #{exp.comments}"
+      end
     end
-    def process_lit(exp)
-      val = exp.shift
-      return val
+
+    def process_defn exp
+      super do
+        args, *_body = exp
+
+        puts "#{self.method_name}(#{process_args args}): #{exp.comments}"
+      end
     end
   end
+
+Sexp provides a lot of power with the new pattern matching system.
+Here is an example that parses all the test files using RubyParser and
+then quickly finds all the test methods and prints their names:
+
+  >> require "ruby_parser";
+  >> rp = RubyParser.new;
+  >> matcher = Sexp::Matcher.parse "(defn [m /^test_/] ___)"
+  => q(:defn, m(/^test_/), ___)
+  >> paths = Dir["test/**/*.rb"];
+  >> sexps = s(:block, *paths.map { |path| rp.process File.read(path), path });
+  >> (sexps / matcher).size
+  => 189
+  ?> (sexps / matcher).map { |(_, name, *_rest)| name }.sort
+  => [:test_all, :test_amp, :test_and_satisfy_eh, :test_any_search, ...]
 
 == REQUIREMENTS:
 
