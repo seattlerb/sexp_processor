@@ -12,11 +12,8 @@ end
 require "minitest/autorun"
 require "minitest/hell" # beat these up
 require "minitest/benchmark" if ENV["BENCH"]
-require "sexp_processor"
+require "sexp_processor" # for deep_clone (TODO: why is that on SP and not S?)
 require "sexp"
-require "strict_sexp" if ENV["STRICT_SEXP"]
-require "stringio"
-require "pp"
 
 def pyramid_sexp max
   # s(:array,
@@ -139,7 +136,6 @@ class TestSexp < SexpTestCase # ZenTest FULL
   def setup
     super
     @sexp_class = Object.const_get(self.class.name[4..-1])
-    @processor = SexpProcessor.new
     @sexp = @sexp_class.new(1, 2, 3)
     @basic_sexp = s(:lasgn, :var, s(:lit, 42).line(1)).line(1)
     @basic_sexp.each_sexp do |s|

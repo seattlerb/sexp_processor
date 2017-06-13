@@ -10,7 +10,6 @@ if ENV["COV"]
 end
 
 require "sexp_processor"
-require "strict_sexp" if ENV["STRICT_SEXP"]
 require "stringio"
 require "minitest/autorun"
 require "pp"
