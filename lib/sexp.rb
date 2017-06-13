@@ -323,10 +323,10 @@ class Sexp < Array # ZenTest FULL
         when Sexp then
           if pattern == subset then
             done = true
-            repl.dup
+            repl.dup rescue repl
           elsif Matcher === pattern && pattern.satisfy?(subset) then
             done = true
-            repl.dup
+            repl.dup rescue repl
           else
             subset.sub pattern, repl
           end

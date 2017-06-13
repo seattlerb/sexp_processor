@@ -1178,7 +1178,7 @@ class TestSexpSearch < SexpTestCase
     mc << defn1.deep_clone
     mc << defn2.deep_clone
 
-    assert_equal mc, sexp.search_each(s{t(:defn)}).map(&:itself)
+    assert_equal mc, sexp.search_each(s{t(:defn)}).map { |x| x }
   end
 
   def test_searching_simple_examples # TODO: possibly remove
