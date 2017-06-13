@@ -152,7 +152,7 @@ class Sexp < Array # ZenTest FULL
       case subset
       when Sexp then
         if Matcher === pattern && pattern.satisfy?(subset) then # TODO: make === be satisfy? maybe?
-          repl.dup
+          repl.dup rescue repl
         else
           subset.gsub pattern, repl
         end

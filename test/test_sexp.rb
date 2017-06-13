@@ -397,7 +397,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_same file, old.last.file
     assert_equal 2, old.last.line
 
-    new = old.map(&:itself)
+    new = old.map { |x| x }
 
     assert_same file,         new.file
     assert_equal 1,           new.line
