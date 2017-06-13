@@ -1,3 +1,48 @@
+=== 4.10.0b1 / 2017-06-13
+
+* 2 major enhancements:
+
+  * Added experimental pattern matcher to Sexp. Forked from sexp_path.
+  * Extended s to take a block and return a matcher: eg s{ s(:defn, atom, _, ___) }
+
+* 23 minor enhancements:
+
+  * Added $STRICT_SEXP to crank down Sexp.[] and friends.
+  * Added Matcher#/ w/ real functionality.
+  * Added Sexp#/ to search with new patterns.
+  * Added Sexp#map to ensure you get a Sexp back.
+  * Added Sexp#new to create a new sexp with the same file/line/comment info.
+  * Added Sexp#search_each to recursively search w/ new patterns. Returns enum if no block.
+  * Added Sexp#sexp_body=
+  * Added Sexp::Matcher.match_subs? and .match_subs= to extend =~ so you can match strictly.
+  * Added Sexp::Matcher.parse to convert lispy string to safe matcher: "(defn atom _ ___)"
+  * Added all mutation methods to STRICT_SEXP >= 4
+  * Added deprecation message to Sexp#structure for [s(...)] forms.
+  * Added strict_sexp.rb to help you clamp down for future changes. STRICT_SEXP=1+
+  * Auto-require strict_sexp if $STRICT_SEXP is > 0.
+  * Converted a lot of indexed access to sexp_type/sexp_body, etc.
+  * Finally enforced SexpProcessor#process to only process sexps, not bare arrays.
+  * Made Sexp#/ double-dispatch to Matcher#/.
+  * Made Sexp#gsub work with new patterns.
+  * Made Sexp#sub work with new patterns.
+  * Made SexpProcessor STRICT_SEXP=4 compliant.
+  * Retired SexpMatchSpecial & SexpAny. Never used by anything AFAICT.
+  * Sexp#=== goes back to default.
+  * Sexp#=~(pat) calls pat =~ self.
+  * Sexp#sexp_body now takes optional offset. Use instead of sexp[n..-1].
+
+* 9 bug fixes:
+
+  * Extended Sexp::Matcher::Parser.parse to lex more forms of regexp.
+  * Finished off all missing doco.
+  * Fixed == methods on all Matcher classes to include ivars.
+  * Fixed Child#satisfy? to properly return false if failed.
+  * Fixed Sexp#sexp_body to return a sexp using Sexp#new.
+  * Fixed map to use Sexp#new.
+  * Only try to set c_type if it responds to it. Make STRICT_SEXP safe.
+  * R2C has a hack in SexpProcessor to call sexp_type=. Renamed to c_type= in R2C.
+  * Removed very obsolete attrset test from pt_testcase.rb
+
 === 4.9.0 / 2017-04-13
 
 * 9 minor enhancements:
