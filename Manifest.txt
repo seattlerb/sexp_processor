@@ -1,6 +1,6 @@
-History.txt
+History.rdoc
 Manifest.txt
-README.txt
+README.rdoc
 Rakefile
 lib/composite_sexp_processor.rb
 lib/pt_testcase.rb
