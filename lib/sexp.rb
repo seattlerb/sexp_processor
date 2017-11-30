@@ -582,7 +582,6 @@ class Sexp #:nodoc:
   #
   # * For pattern creation, see factory methods: Sexp::_, Sexp::___, etc.
   # * For matching returning truthy/falsey results, see Sexp#=~.
-  # * See Sexp#=~ for matching returning truthy/falsey results.
   # * For case expressions, see Matcher#===.
   # * For getting all subtree matches, see Sexp#/.
   #
@@ -758,7 +757,7 @@ class Sexp #:nodoc:
       # Converts +s+ into a stream of tokens and adds them to +tokens+.
 
       def lex s
-        tokens.concat s.scan(%r%[()\[\]]|\"[^"]*\"|/[^/]*/|[\w-]+%)
+        tokens.concat s.scan(%r%[()\[\]]|\"[^"]*\"|/[^/]*/|[\w-]+%) # "
       end
 
       ##
