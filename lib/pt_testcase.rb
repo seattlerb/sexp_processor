@@ -441,11 +441,13 @@ class ParseTreeTestCase < Minitest::Test
               "Ruby"         => "!a",
               "ParseTree"    => s(:call,
                                   s(:call, nil, :a),
-                                  :"!"))
+                                  :"!"),
+              "Ruby2Ruby"    => "(not a)")
 
   add_19tests("call_bang_empty",
               "Ruby"         => "! ()",
-              "ParseTree"    => s(:call, s(:nil), :"!"))
+              "ParseTree"    => s(:call, s(:nil), :"!"),
+              "Ruby2Ruby"    => "(not nil)")
 
   add_19tests("call_fonz",
               "Ruby"         => "a.()",
@@ -459,7 +461,8 @@ class ParseTreeTestCase < Minitest::Test
 
   add_19tests("call_not",
               "Ruby"      => "not (42)",
-              "ParseTree" => s(:call, s(:lit, 42), :"!"))
+              "ParseTree" => s(:call, s(:lit, 42), :"!"),
+              "Ruby2Ruby" => "(not 42)")
 
   # add_19tests("call_not_empty",
   #             "Ruby"      => "not ()",
@@ -470,7 +473,8 @@ class ParseTreeTestCase < Minitest::Test
             "ParseTree"    => s(:call,
                                 s(:call, nil, :a),
                                 :"!=",
-                                s(:call, nil, :b)))
+                                s(:call, nil, :b)),
+            "Ruby2Ruby"    => "(a != b)")
 
   add_19tests("call_splat_mid",
               "Ruby"      => "def f(a = nil, *b, c)\n  # do nothing\nend",
@@ -589,15 +593,18 @@ class ParseTreeTestCase < Minitest::Test
 
   add_19tests("str_question_control",
               "Ruby"         => '?\M-\C-a',
-              "ParseTree"    => s(:str, "\x81"))
+              "ParseTree"    => s(:str, "\x81"),
+              "Ruby2Ruby"    => "\"\\x81\"")
 
   add_19tests("str_question_escape",
               "Ruby"         => '?\n',
-              "ParseTree"    => s(:str, "\n"))
+              "ParseTree"    => s(:str, "\n"),
+              "Ruby2Ruby"    => "\"\\n\"")
 
   add_19tests("str_question_literal",
               "Ruby"         => "?a",
-              "ParseTree"    => s(:str, "a"))
+              "ParseTree"    => s(:str, "a"),
+              "Ruby2Ruby"    => '"a"')
 
   add_19tests("unless_post_not",
               "Ruby"         => "a unless not b",
