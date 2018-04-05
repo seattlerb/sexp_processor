@@ -86,12 +86,19 @@ class Sexp < Array # ZenTest FULL
 
   ##
   # Recursively enumerates the sexp yielding to +block+ for every element.
+  #
+  # Returning :skip will stop traversing that subtree:
+  #
+  #   sexp.deep_each do |s|
+  #     next :skip if s.sexp_type == :if
+  #     # ...
+  #   end
 
   def deep_each &block
     return enum_for(:deep_each) unless block_given?
 
     self.each_sexp do |sexp|
-      block[sexp]
+      next if block[sexp] == :skip
       sexp.deep_each(&block)
     end
   end

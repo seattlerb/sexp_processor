@@ -641,15 +641,28 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal 5, s(:a, s(:b, s(:c, s(:d, s(:e))))).depth
   end
 
+  DEEP_EXP = [:lasgn, :str, :if,
+              :and, :true, :lit,
+              :if, :lvar, :str, :true]
+
   def test_deep_each
-    result = []
-    @complex_sexp.deep_each { |s| result << s if s.sexp_type == :if }
-    assert_equal [:if, :if], result.map { |k, _| k }
+    act = []
+
+    @complex_sexp.deep_each { |s| act << s }
+    assert_equal DEEP_EXP, act.map { |k, _| k }
+  end
+
+  def test_deep_each_skip
+    exp = DEEP_EXP.first(3) + DEEP_EXP.last(4)
+    act = []
+
+    @complex_sexp.deep_each { |s| next :skip if s.sexp_type == :and; act << s }
+    assert_equal exp, act.map { |k, _| k }
   end
 
   def test_deep_each_without_block
     assert_kind_of Enumerator, @complex_sexp.deep_each
-    assert_equal [:if, :if], @complex_sexp.deep_each.select { |s, _| s == :if }.map { |k, _| k }
+    assert_equal DEEP_EXP, @complex_sexp.deep_each.map(&:first)
   end
 
   def test_unary_not
