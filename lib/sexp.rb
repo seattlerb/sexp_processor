@@ -37,7 +37,7 @@ class Sexp < Array # ZenTest FULL
   def self.from_array a
     ary = Array === a ? a : [a]
 
-    self.new(*ary.map { |x|
+    self.new.concat(ary.map { |x|
                case x
                when Sexp
                  x
@@ -54,7 +54,7 @@ class Sexp < Array # ZenTest FULL
   # same +file+, +line+, and +comment+ as self.
 
   def new(*body)
-    r = self.class.new(*body) # ensures a sexp from map
+    r = self.class.new.concat(body) # ensures a sexp from map
     r.file     = self.file     if self.file
     r.line     = self.line     if self.line
     r.comments = self.comments if self.comments
@@ -62,7 +62,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def map &blk # :nodoc:
-    self.new(*super(&blk)) # ensures a sexp from map
+    self.new.concat(super(&blk)) # ensures a sexp from map
   end
 
   def == obj # :nodoc:
@@ -278,7 +278,7 @@ class Sexp < Array # ZenTest FULL
   # the values without the node type.
 
   def sexp_body from = 1
-    self.new(*self[from..-1])
+    self.new.concat(self[from..-1])
   end
 
   ##
