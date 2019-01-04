@@ -278,7 +278,7 @@ class Sexp < Array # ZenTest FULL
   # the values without the node type.
 
   def sexp_body from = 1
-    self.new.concat(self[from..-1])
+    self.new.concat(self[from..-1] || [])
   end
 
   ##

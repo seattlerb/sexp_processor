@@ -519,7 +519,11 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_sexp_body
-    assert_equal [2, 3], @sexp.sexp_body
+    assert_equal s(2, 3), @sexp.sexp_body
+    assert_equal s(),     s(:x).sexp_body
+    assert_equal s(),     s().sexp_body
+
+    assert_instance_of Sexp, s().sexp_body
   end
 
   def test_shift
