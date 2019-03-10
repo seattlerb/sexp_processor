@@ -666,7 +666,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_deep_each_without_block
     assert_kind_of Enumerator, @complex_sexp.deep_each
-    assert_equal DEEP_EXP, @complex_sexp.deep_each.map(&:first)
+    assert_equal DEEP_EXP, @complex_sexp.deep_each.map(&:sexp_type)
   end
 
   def test_unary_not

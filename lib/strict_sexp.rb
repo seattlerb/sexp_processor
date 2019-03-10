@@ -44,7 +44,7 @@ class Sexp
 
   def self.nuke_method name, level
     define_method name do |*args|
-      raise "no: %p.%s %p" % [self, name, args]
+      raise "no mutation allowed on sexps: %s.%s %s" % [self, name, args]
     end if __strict >= level
   end
 
@@ -87,7 +87,7 @@ class Sexp
 
   nuke_method :collect!, 4
   nuke_method :compact!, 4
-  nuke_method :concat,   4
+  # nuke_method :concat,   4 # HACK: using self.class.new.concat(...) for speed 
   nuke_method :flatten!, 4
   nuke_method :map!,     4
   nuke_method :pop,      4
@@ -111,7 +111,7 @@ class Sexp
   end
 
   def sexp_body from = 1
-    safe_idx from..-1
+    self.new.concat(safe_idx(from..-1) || [])
   end
 
   def sexp_type= v
