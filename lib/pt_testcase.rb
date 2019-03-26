@@ -2080,17 +2080,15 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby"         => "lambda { |a,| a }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :lambda),
-                                s(:args, :a),
-                                s(:lvar, :a)),
-            "Ruby2Ruby"    => "lambda { |a| a }")
+                                s(:args, :a, nil),
+                                s(:lvar, :a)))
 
   add_tests("lambda_args_norm_comma2",
-            "Ruby"         => "lambda { |a,b,| a }",
+            "Ruby"         => "lambda { |a, b,| a }",
             "ParseTree"    => s(:iter,
                                 s(:call, nil, :lambda),
-                                s(:args, :a, :b),
-                                s(:lvar, :a)),
-            "Ruby2Ruby"    => "lambda { |a, b| a }")
+                                s(:args, :a, :b, nil),
+                                s(:lvar, :a)))
 
   add_tests("lambda_args_norm_star",
             "Ruby"         => "lambda { |a, *star| star }",
