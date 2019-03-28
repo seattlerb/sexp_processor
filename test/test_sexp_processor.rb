@@ -247,12 +247,12 @@ class TestSexpProcessor < Minitest::Test
   end
 
   def test_assert_type_hit
-    assert_nil @processor.assert_type([:blah, 1, 2, 3], :blah)
+    assert_nil @processor.assert_type(s(:blah, 1, 2, 3), :blah)
   end
 
   def test_assert_type_miss
     assert_raises SexpTypeError do
-      @processor.assert_type([:thingy, 1, 2, 3], :blah)
+      @processor.assert_type(s(:thingy, 1, 2, 3), :blah)
     end
   end
 

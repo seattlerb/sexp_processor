@@ -317,7 +317,7 @@ class SexpProcessor
 
   def assert_type list, typ
     raise SexpTypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
-      not Array === list or list.first != typ
+      not Array === list or list.sexp_type != typ
   end
 
   def error_handler type, exp = nil # :nodoc:
