@@ -363,26 +363,26 @@ class ParseTreeTestCase < Minitest::Test
   ###
   # 1.9 specific tests
 
-  add_19edgecases("lambda { || (x + 1) }",
+  add_19edgecases("-> () { (x + 1) }",
                   s(:iter,
-                    s(:call, nil, :lambda),
+                    s(:lambda),
                     s(:args),
                     s(:call, s(:call, nil, :x), :+, s(:lit, 1))),
                   "stabby_args"                   => "->() { (x + 1) }",
                   "stabby_args_doend"             => "->() do (x + 1) end")
 
-  add_19edgecases("lambda { (x + 1) }",
+  add_19edgecases("-> { (x + 1) }",
                   s(:iter,
-                    s(:call, nil, :lambda),
+                    s(:lambda),
                     0,
                     s(:call, s(:call, nil, :x), :+, s(:lit, 1))),
                   "stabby_args_0_no_parens"       => "-> { (x + 1) }",
                   "stabby_args_0_no_parens_doend" => "-> do (x + 1) end",
                   "stabby_args_0_spacebar_broken" => "->{x+1}") # I hate you
 
-  add_19edgecases("lambda { |x, y| (x + y) }",
+  add_19edgecases("-> (x, y) { (x + y) }",
                   s(:iter,
-                    s(:call, nil, :lambda),
+                    s(:lambda),
                     s(:args, :x, :y),
                     s(:call, s(:lvar, :x), :+, s(:lvar, :y))),
                   "stabby_args_2"                 => "->(x, y) { (x + y) }",
@@ -390,9 +390,9 @@ class ParseTreeTestCase < Minitest::Test
                   "stabby_args_2_no_parens"       => "-> x, y { (x + y) }",
                   "stabby_args_2_no_parens_doend" => "-> x, y do (x + y) end")
 
-  add_19edgecases("lambda { |x| (x + 1) }",
+  add_19edgecases("-> (x) { (x + 1) }",
                   s(:iter,
-                    s(:call, nil, :lambda),
+                    s(:lambda),
                     s(:args, :x),
                     s(:call, s(:lvar, :x), :+, s(:lit, 1))),
                   "stabby_args_1"                 => "->(x) { (x + 1) }",
