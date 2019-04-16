@@ -202,13 +202,16 @@ class Sexp < Array # ZenTest FULL
     each_sexp.find_all { |sexp| sexp.sexp_type == name }
   end
 
+  UNASSIGNED = Object.new
+
   ##
   # If passed a line number, sets the line and returns self. Otherwise
   # returns the line number. This allows you to do message cascades
   # and still get the sexp back.
 
-  def line n = nil
-    if n then
+  def line n = UNASSIGNED
+    if n != UNASSIGNED then
+      raise ArgumentError, "setting %p.line %p" % [self, n] unless Integer === n
       @line = n
       self
     else
