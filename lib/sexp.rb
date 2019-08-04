@@ -446,8 +446,14 @@ class Sexp #:nodoc:
   #
   # See Matcher for examples.
 
-  def self.s *args
+  def self.q *args
     Matcher.new(*args)
+  end
+
+  def self.s *args
+    where = caller.first.split(/:/, 3).first(2).join ":"
+    warn "DEPRECATED: use Sexp.q(...) instead. From %s" % [where]
+    q(*args)
   end
 
   ##
@@ -848,7 +854,7 @@ class Sexp #:nodoc:
         result << parse_sexp while peek_token && peek_token != ")"
         next_token # pop off ")"
 
-        Sexp.s(*result)
+        Sexp.q(*result)
       end
 
       ##
@@ -867,7 +873,7 @@ class Sexp #:nodoc:
         next_token # pop off "]"
 
         cmd = args.shift
-        args = Sexp.s(*args)
+        args = Sexp.q(*args)
 
         raise SyntaxError, "bad cmd: %p" % [cmd] unless ALLOWED.include? cmd
 

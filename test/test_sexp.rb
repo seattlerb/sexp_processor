@@ -233,16 +233,16 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_equal3_subset_match
-    assert_match  s{s(:a)},      s(s(:a), s(:b))                  # left - =~
-    assert_equal3 s{s(:a)},      s(s(:a), s(:b))                  # left - ===
-    assert_equal3 s{s(:a)},      s(:blah, s(:a   ), s(:b))        # mid 1
-    assert_equal3 s{s(:a, 1)},   s(:blah, s(:a, 1), s(:b))        # mid 2
-    assert_equal3 s{s(:a)},      s(:blah, s(:blah, s(:a)))        # left deeper
+    assert_match  s{q(:a)},      s(s(:a), s(:b))                  # left - =~
+    assert_equal3 s{q(:a)},      s(s(:a), s(:b))                  # left - ===
+    assert_equal3 s{q(:a)},      s(:blah, s(:a   ), s(:b))        # mid 1
+    assert_equal3 s{q(:a, 1)},   s(:blah, s(:a, 1), s(:b))        # mid 2
+    assert_equal3 s{q(:a)},      s(:blah, s(:blah, s(:a)))        # left deeper
   end
 
   def test_equalstilde_fancy
-    assert_match s{ s(:b) }, s(:a, s(:b), :c)
-    assert_match s(:a, s(:b), :c), s{ s(:b) }
+    assert_match s{ q(:b) }, s(:a, s(:b), :c)
+    assert_match s(:a, s(:b), :c), s{ q(:b) }
 
     e = assert_raises ArgumentError do
       s(:b) =~ s(:a, s(:b), :c)
@@ -256,8 +256,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_equalstilde_plain
-    s{ s(:re) } =~ s(:data) # pattern on LHS
-    s(:data) =~ s{ s(:re) } # pattern on RHS
+    s{ q(:re) } =~ s(:data) # pattern on LHS
+    s(:data) =~ s{ q(:re) } # pattern on RHS
 
     e = assert_raises ArgumentError do
       s(:re) =~ s(:data)    # no pattern
@@ -297,10 +297,10 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_gsub_matcher
-    assert_gsub s(:a, :b, :c),        s(:a, s(:b, 42), :c),        s{ s(:b, _) }, :b
-    assert_gsub s(:a, s(:b), :c),     s(:a, s(:b), :c),            s{ s(:b, _) }, :b
-    assert_gsub s(:a, s(:c, :b), :d), s(:a, s(:c, s(:b, 42)), :d), s{ s(:b, _) }, :b
-    assert_gsub s(:a, s(:q), :c),     s(:a, s(:q), :c),            s{ s(:b, _) }, :b
+    assert_gsub s(:a, :b, :c),        s(:a, s(:b, 42), :c),        s{ q(:b, _) }, :b
+    assert_gsub s(:a, s(:b), :c),     s(:a, s(:b), :c),            s{ q(:b, _) }, :b
+    assert_gsub s(:a, s(:c, :b), :d), s(:a, s(:c, s(:b, 42)), :d), s{ q(:b, _) }, :b
+    assert_gsub s(:a, s(:q), :c),     s(:a, s(:q), :c),            s{ q(:b, _) }, :b
   end
 
   def with_env key
@@ -589,14 +589,14 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_sub_matcher
-    assert_sub s(:c),               s(:b),               s{ s(:b) }, s(:c)
-    assert_sub s(:a, s(:c), s(:b)), s(:a, s(:b), s(:b)), s{ s(:b) }, s(:c)
-    assert_sub s(:a, s(:c), s(:a)), s(:a, s(:b), s(:a)), s{ s(:b) }, s(:c)
+    assert_sub s(:c),               s(:b),               s{ q(:b) }, s(:c)
+    assert_sub s(:a, s(:c), s(:b)), s(:a, s(:b), s(:b)), s{ q(:b) }, s(:c)
+    assert_sub s(:a, s(:c), s(:a)), s(:a, s(:b), s(:a)), s{ q(:b) }, s(:c)
 
-    assert_sub s(:a, :b, :c),        s(:a, s(:b, 42), :c),        s{ s(:b, _) }, :b
-    assert_sub s(:a, s(:b), :c),     s(:a, s(:b), :c),            s{ s(:b, _) }, :b
-    assert_sub s(:a, s(:c, :b), :d), s(:a, s(:c, s(:b, 42)), :d), s{ s(:b, _) }, :b
-    assert_sub s(:a, s(:q), :c),     s(:a, s(:q), :c),            s{ s(:b, _) }, :b
+    assert_sub s(:a, :b, :c),        s(:a, s(:b, 42), :c),        s{ q(:b, _) }, :b
+    assert_sub s(:a, s(:b), :c),     s(:a, s(:b), :c),            s{ q(:b, _) }, :b
+    assert_sub s(:a, s(:c, :b), :d), s(:a, s(:c, s(:b, 42)), :d), s{ q(:b, _) }, :b
+    assert_sub s(:a, s(:q), :c),     s(:a, s(:q), :c),            s{ q(:b, _) }, :b
   end
 
   def test_sub_structure
@@ -682,7 +682,7 @@ end # TestSexp
 
 class TestSexpMatcher < SexpTestCase
   def test_cls_s
-    assert_equal M.s(:x), s{ s(:x) }
+    assert_equal M.q(:x), s{ q(:x) }
   end
 
   def test_cls_underscore
@@ -702,19 +702,19 @@ class TestSexpMatcher < SexpTestCase
   end
 
   def test_cls_any
-    assert_equal M::Any.new(M.s(:a), M.s(:b)), s{ any(s(:a), s(:b)) }
+    assert_equal M::Any.new(M.q(:a), M.q(:b)), s{ any(q(:a), q(:b)) }
   end
 
   def test_cls_all
-    assert_equal M::All.new(M.s(:a), M.s(:b)), s{ all(s(:a), s(:b)) }
+    assert_equal M::All.new(M.q(:a), M.q(:b)), s{ all(q(:a), q(:b)) }
   end
 
   def test_cls_not_eh
-    assert_equal M::Not.new(M.s(:a)), s{ not?(s(:a)) }
+    assert_equal M::Not.new(M.q(:a)), s{ not?(q(:a)) }
   end
 
   def test_cls_child
-    assert_equal M::Child.new(M.s(:a)), s{ child(s(:a)) }
+    assert_equal M::Child.new(M.q(:a)), s{ child(q(:a)) }
   end
 
   def test_cls_t
@@ -730,37 +730,37 @@ class TestSexpMatcher < SexpTestCase
   end
 
   def test_amp
-    m = s{ s(:a) & s(:b) }
-    e = M::All.new(M.s(:a), M.s(:b))
+    m = s{ q(:a) & q(:b) }
+    e = M::All.new(M.q(:a), M.q(:b))
 
     assert_equal e, m
   end
 
   def test_pipe
-    m = s{ s(:a) | s(:b) }
-    e = M::Any.new(M.s(:a), M.s(:b))
+    m = s{ q(:a) | q(:b) }
+    e = M::Any.new(M.q(:a), M.q(:b))
 
     assert_equal e, m
   end
 
   def test_unary_minus
-    assert_equal M::Not.new(M.s(:a)), s{ -s(:a) }
+    assert_equal M::Not.new(M.q(:a)), s{ -q(:a) }
   end
 
   def test_rchevron
-    assert_equal M::Sibling.new(M.s(:a), M.s(:b)), s{ s(:a) >> s(:b) }
+    assert_equal M::Sibling.new(M.q(:a), M.q(:b)), s{ q(:a) >> q(:b) }
   end
 
   def test_greedy_eh
-    refute_operator s{ s(:a) }, :greedy?
+    refute_operator s{ q(:a) }, :greedy?
   end
 
   def test_inspect
-    assert_inspect "q(:a)", s{ s(:a) }
+    assert_inspect "q(:a)", s{ q(:a) }
   end
 
   def test_pretty_print
-    assert_pretty_print "q(:a)", s{ s(:a) }
+    assert_pretty_print "q(:a)", s{ q(:a) }
   end
 end # class TestSexpMatcher
 
@@ -790,11 +790,11 @@ class TestWild < MatcherTestCase
   def test_wild_search # TODO: possibly remove
     sexp = CLASS_SEXP.dup
 
-    assert_search 1, s(:add, :a, :b), s{ s(:add, _, :b) }
-    assert_search 1, sexp,            s{ s(:defn, :bar, _, _) }
-    assert_search 2, sexp,            s{ s(:defn, _, _, s(_, :a, :b) ) }
-    assert_search 1, s(:a, s()),      s{ s(:a, _) }
-    assert_search 1, s(:a, :b, :c),   s{ s(_, _, _) }
+    assert_search 1, s(:add, :a, :b), s{ q(:add, _, :b) }
+    assert_search 1, sexp,            s{ q(:defn, :bar, _, _) }
+    assert_search 2, sexp,            s{ q(:defn, _, _, q(_, :a, :b) ) }
+    assert_search 1, s(:a, s()),      s{ q(:a, _) }
+    assert_search 1, s(:a, :b, :c),   s{ q(_, _, _) }
     assert_search 7, sexp,            s{ _ }
   end
 end
@@ -815,8 +815,8 @@ class TestRemaining < MatcherTestCase
   def test_remaining_satisfy_eh # TODO: possibly remove
     assert_satisfy s{ ___         }, s(:a)
     assert_satisfy s{ ___         }, s(:a, :b, :c)
-    assert_satisfy s{ s(:x, ___ ) }, s(:x, :y)
-    refute_satisfy s{ s(:y, ___ ) }, s(:x, :y)
+    assert_satisfy s{ q(:x, ___ ) }, s(:x, :y)
+    refute_satisfy s{ q(:y, ___ ) }, s(:x, :y)
   end
 
   def test_greedy
@@ -826,7 +826,7 @@ end
 
 class TestAny < MatcherTestCase
   def matcher
-    s{ s(:a) | s(:c) }
+    s{ q(:a) | q(:c) }
   end
 
   def inspect_str
@@ -838,26 +838,26 @@ class TestAny < MatcherTestCase
   end
 
   def test_any_search # TODO: possibly remove
-    assert_search 2, s(:foo, s(:a), s(:b)), s{ s(any(:a, :b)) }
-    assert_search 1, s(:foo, s(:a), s(:b)), s{ any( s(:a), s(:c)) }
+    assert_search 2, s(:foo, s(:a), s(:b)), s{ q(any(:a, :b)) }
+    assert_search 1, s(:foo, s(:a), s(:b)), s{ any( q(:a), q(:c)) }
   end
 
   def test_or_satisfy_eh # TODO: possibly remove
-    assert_satisfy s{ s(:a) | s(:b) }, s(:a)
-    refute_satisfy s{ s(:a) | s(:b) }, s(:c)
+    assert_satisfy s{ q(:a) | q(:b) }, s(:a)
+    refute_satisfy s{ q(:a) | q(:b) }, s(:c)
   end
 
   def test_or_search # TODO: possibly remove
     sexp = CLASS_SEXP.dup
 
-    assert_search 2, s(:a, s(:b, :c), s(:b, :d)), s{ s(:b, :c) | s(:b, :d) }
-    assert_search 2, sexp, s{ s(:add, :a, :b) | s(:defn, :bar, _, _) }
+    assert_search 2, s(:a, s(:b, :c), s(:b, :d)), s{ q(:b, :c) | q(:b, :d) }
+    assert_search 2, sexp, s{ q(:add, :a, :b) | q(:defn, :bar, _, _) }
   end
 end
 
 class TestAll < MatcherTestCase
   def matcher
-    s{ s(:a) & s(:a) }
+    s{ q(:a) & q(:a) }
   end
 
   def inspect_str
@@ -869,14 +869,14 @@ class TestAll < MatcherTestCase
   end
 
   def test_and_satisfy_eh # TODO: possibly remove
-    refute_satisfy s{ s(:a) & s(:b)   }, s(:a)
-    assert_satisfy s{ s(:a) & s(atom) }, s(:a)
+    refute_satisfy s{ q(:a) & q(:b)   }, s(:a)
+    assert_satisfy s{ q(:a) & q(atom) }, s(:a)
   end
 end
 
 class TestNot < MatcherTestCase
   def matcher
-    s{ not? s(:b) } # TODO: test unary minus
+    s{ not? q(:b) } # TODO: test unary minus
   end
 
   def inspect_str
@@ -889,16 +889,16 @@ class TestNot < MatcherTestCase
 
   def test_not_satisfy_eh # TODO: possibly remove
     refute_satisfy s{ -_            }, s(:a)
-    assert_satisfy s{ -s(:b)        }, s(:a)
-    assert_satisfy s{ not?(s(:b)) }, s(:a)
-    refute_satisfy s{ -s(atom)      }, s(:a)
-    assert_satisfy s{ s(not?(:b)) }, s(:a)
+    assert_satisfy s{ -q(:b)        }, s(:a)
+    assert_satisfy s{ not?(q(:b)) }, s(:a)
+    refute_satisfy s{ -q(atom)      }, s(:a)
+    assert_satisfy s{ q(not?(:b)) }, s(:a)
   end
 end
 
 class TestChild < MatcherTestCase
   def matcher
-    s{ child(s(:a)) }
+    s{ child(q(:a)) }
   end
 
   def sexp
@@ -916,8 +916,8 @@ class TestChild < MatcherTestCase
   def test_child_search # TODO: possibly remove
     sexp = CLASS_SEXP.dup
 
-    assert_search 1, sexp, s{ s(:class, :cake, _, _, child( s(:sub, :a, :b) ) ) }
-    assert_search 1, sexp, s{ s(:class, :cake, _, _, child(include(:a))) }
+    assert_search 1, sexp, s{ q(:class, :cake, _, _, child( q(:sub, :a, :b) ) ) }
+    assert_search 1, sexp, s{ q(:class, :cake, _, _, child(include(:a))) }
   end
 
   def test_satisfy_eh_by_child
@@ -954,15 +954,15 @@ class TestAtom < MatcherTestCase
   def test_atom_search # TODO: possibly remove
     sexp = CLASS_SEXP.dup
 
-    assert_search 1, s(:add, :a, :b), s{ s(:add, atom, :b) }
-    assert_search 2, sexp,            s{ s(:defn, atom, _, s(atom, :a, :b) ) }
-    assert_search 0, s(:a, s()),      s{ s(:a, atom) }
+    assert_search 1, s(:add, :a, :b), s{ q(:add, atom, :b) }
+    assert_search 2, sexp,            s{ q(:defn, atom, _, q(atom, :a, :b) ) }
+    assert_search 0, s(:a, s()),      s{ q(:a, atom) }
   end
 end
 
 class TestPattern < MatcherTestCase
   def matcher
-    s{ s(:a, m(/a/)) }
+    s{ q(:a, m(/a/)) }
   end
 
   def sexp
@@ -984,15 +984,15 @@ class TestPattern < MatcherTestCase
   def test_pattern_search # TODO: possibly remove
     sexp = CLASS_SEXP.dup
 
-    assert_search 2, sexp, s{ s(m(/\w{3}/), :a, :b) }
+    assert_search 2, sexp, s{ q(m(/\w{3}/), :a, :b) }
 
     assert_search 0, s(:a), s{   m(/\w/) }
-    assert_search 1, s(:a), s{ s(m(/\w/)) }
+    assert_search 1, s(:a), s{ q(m(/\w/)) }
     assert_search 0, s(:a), s{   m(/\w/,/\d/) }
-    assert_search 1, s(:a), s{ s(m(/\w/,/\d/)) }
+    assert_search 1, s(:a), s{ q(m(/\w/,/\d/)) }
 
     assert_search 0, s(:tests, s(s(:test_a), s(:test_b))), s{   m(/test_\w/) }
-    assert_search 2, s(:tests, s(s(:test_a), s(:test_b))), s{ s(m(/test_\w/)) }
+    assert_search 2, s(:tests, s(s(:test_a), s(:test_b))), s{ q(m(/test_\w/)) }
   end
 end
 
@@ -1021,7 +1021,7 @@ class TestInclude < MatcherTestCase
   end
 
   def matcher
-    s{ include(s(:a)) }
+    s{ include(q(:a)) }
   end
 
   def inspect_str
@@ -1033,9 +1033,9 @@ class TestInclude < MatcherTestCase
 
     assert_search 1, s(:add, :a, :b), s{ include(:a) }
     assert_search 1, sexp, s{ include(:bar) }
-    assert_search 2, sexp, s{ s(:defn, atom, _, include(:a)) }
+    assert_search 2, sexp, s{ q(:defn, atom, _, include(:a)) }
     assert_search 2, sexp, s{ include(:a) }
-    assert_search 0, s(:a, s(:b, s(:c))), s{ s(:a, include(:c)) }
+    assert_search 0, s(:a, s(:b, s(:c))), s{ q(:a, include(:c)) }
   end
 end
 
@@ -1045,7 +1045,7 @@ class TestSibling < MatcherTestCase
   end
 
   def matcher
-    s{ s(:a) >> s(:b) }
+    s{ q(:a) >> q(:b) }
   end
 
   def inspect_str
@@ -1053,15 +1053,15 @@ class TestSibling < MatcherTestCase
   end
 
   def test_pretty_print_distance
-    m = s{ M::Sibling.new(s(:a), s(:b), 3) } # maybe s(:a) << s(:b) << 3 ?
+    m = s{ M::Sibling.new(q(:a), q(:b), 3) } # maybe q(:a) << q(:b) << 3 ?
     assert_pretty_print "sibling(q(:a), q(:b), 3)", m
   end
 
   def test_sibling_satisfy_eh # TODO: possibly remove
-    a_a = s{ s(:a) >> s(:a) }
-    a_b = s{ s(:a) >> s(:b) }
-    a_c = s{ s(:a) >> s(:c) }
-    c_a = s{ s(:c) >> s(:a) }
+    a_a = s{ q(:a) >> q(:a) }
+    a_b = s{ q(:a) >> q(:b) }
+    a_c = s{ q(:a) >> q(:c) }
+    c_a = s{ q(:c) >> q(:a) }
 
     assert_satisfy a_b, s(s(:a), s(:b))
     assert_satisfy a_b, s(s(:a), s(:b), s(:c))
@@ -1093,8 +1093,8 @@ class TestMatchCollection < SexpTestCase
         s(:defn, :foo, s(:args), s(:add, :a, :b)),
         s(:defn, :bar, s(:args), s(:sub, :a, :b)))
 
-    res = sexp / s{ s(:class, atom, _, ___) } # sexp / pat => MC
-    act = res / s{ s(:defn, atom, ___) }      # MC   / pat => MC
+    res = sexp / s{ q(:class, atom, _, ___) } # sexp / pat => MC
+    act = res / s{ q(:defn, atom, ___) }      # MC   / pat => MC
 
     _, _, _, defn1, defn2 = sexp
 
@@ -1151,7 +1151,7 @@ class TestSexpSearch < SexpTestCase
   end
 
   def test_slash_simple
-    act = sexp / s{ s(:class, atom, _, ___) }
+    act = sexp / s{ q(:class, atom, _, ___) }
 
     exp = MC.new
     exp << sexp.deep_clone
@@ -1160,7 +1160,7 @@ class TestSexpSearch < SexpTestCase
   end
 
   def test_slash_subsexp
-    act = sexp / s{ s(:defn, atom, ___) }
+    act = sexp / s{ q(:defn, atom, ___) }
 
     exp = MC.new
     exp << s(:defn, :foo, s(:args), s(:add, :a, :b))
@@ -1170,7 +1170,7 @@ class TestSexpSearch < SexpTestCase
   end
 
   def test_slash_data
-    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
+    pat = s{ q(:defn, m(/^test_.+/), ___ ) }
 
     _, _, (_klass, _, _, _setup, t1, t2, t3) = TestUseCase.sexp.deep_clone
     exp = [t1, t2, t3]
@@ -1199,27 +1199,27 @@ class TestSexpSearch < SexpTestCase
       assert_search 0, sexp, :class # non-pattern should raise
     end
 
-    assert_search 0, sexp,                s{ s(:class) }
-    assert_search 1, sexp,                s{ s(:add, :a, :b) }
-    assert_search 1, s(:a, s(:b, s(:c))), s{ s(:b, s(:c)) }
-    assert_search 0, s(:a, s(:b, s(:c))), s{ s(:a, s(:c)) }
-    assert_search 1, sexp,                s{ s(:defn, :bar, _, s(:sub, :a, :b)) }
+    assert_search 0, sexp,                s{ q(:class) }
+    assert_search 1, sexp,                s{ q(:add, :a, :b) }
+    assert_search 1, s(:a, s(:b, s(:c))), s{ q(:b, q(:c)) }
+    assert_search 0, s(:a, s(:b, s(:c))), s{ q(:a, q(:c)) }
+    assert_search 1, sexp,                s{ q(:defn, :bar, _, q(:sub, :a, :b)) }
   end
 
   def test_satisfy_eh_any_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    assert_satisfy s{ any(s(:add, :a, :b), s(:sub, :a, :b)) }, sexp
+    assert_satisfy s{ any(q(:add, :a, :b), q(:sub, :a, :b)) }, sexp
 
-    assert_satisfy s{ any(s(atom, :a, :b), s(:sub, :a, :b)) }, sexp
+    assert_satisfy s{ any(q(atom, :a, :b), q(:sub, :a, :b)) }, sexp
   end
 
   def test_satisfy_eh_all_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    assert_satisfy s{ all(s(_, :a, :b), s(atom, :a, :b)) }, sexp
+    assert_satisfy s{ all(q(_, :a, :b), q(atom, :a, :b)) }, sexp
 
-    assert_satisfy s{ all(s(_, :a, :b), s(atom, :a, :b)) }, sexp
+    assert_satisfy s{ all(q(_, :a, :b), q(atom, :a, :b)) }, sexp
 
-    assert_search 1, sexp, s{ all(s(_, :a, :b), s(atom, :a, :b)) }
+    assert_search 1, sexp, s{ all(q(_, :a, :b), q(atom, :a, :b)) }
   end
 end
 
@@ -1228,15 +1228,15 @@ class TestSexpPath < Minitest::Test
     sexp = s(:a, :b, :c) # s called outside block
 
     assert_instance_of Sexp,          s{ sexp.deep_clone }
-    assert_instance_of Sexp::Matcher, s{ s(:a, :b, :c) }
-    assert_instance_of Sexp::Matcher, s{ s(:a, atom, :c) }
+    assert_instance_of Sexp::Matcher, s{ q(:a, :b, :c) }
+    assert_instance_of Sexp::Matcher, s{ q(:a, atom, :c) }
   end
 end
 
 class TestSexpReplaceSexp < SexpTestCase
   def test_replace_sexp
     sexp = s(:a, s(:b), :c)
-    actual = sexp.replace_sexp(s{ s(:b) }) { :b }
+    actual = sexp.replace_sexp(s{ q(:b) }) { :b }
 
     assert_equal s(:a, :b, :c), actual
   end
@@ -1309,7 +1309,7 @@ class TestUseCase < SexpTestCase
   end
 
   def test_finding_classes_and_methods
-    res = @sexp / s{ s(:class, atom, ___ ) }
+    res = @sexp / s{ q(:class, atom, ___ ) }
 
     _klass, name, * = res.first
 
@@ -1321,7 +1321,7 @@ class TestUseCase < SexpTestCase
   end
 
   def test_finding_empty_test_methods
-    empty_test = s{ s(:defn, m(/^test_.+/), s(:args), s(:nil)) }
+    empty_test = s{ q(:defn, m(/^test_.+/), q(:args), q(:nil)) }
     res = @sexp / empty_test
 
     _, _, (_klass, _, _, _setup, _t1, t2, _t3) = TestUseCase.sexp.deep_clone
@@ -1330,7 +1330,7 @@ class TestUseCase < SexpTestCase
   end
 
   def test_search_each_finding_duplicate_test_names
-    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
+    pat = s{ q(:defn, m(/^test_.+/), ___ ) }
     counts = Hash.new { |h, k| h[k] = 0 }
 
     @sexp.search_each pat do |x|
@@ -1343,7 +1343,7 @@ class TestUseCase < SexpTestCase
   end
 
   def test_finding_duplicate_test_names_via_res
-    pat = s{ s(:defn, m(/^test_.+/), ___ ) }
+    pat = s{ q(:defn, m(/^test_.+/), ___ ) }
     res = @sexp / pat
     counts = Hash.new { |h, k| h[k] = 0 }
 
@@ -1362,8 +1362,8 @@ class TestUseCase < SexpTestCase
   end
 
   def test_rewriting_colon2s
-    colon2   = s{ s(:colon2, s(:const, atom), atom) }
-    expected = s{ s(:const, "Minitest::Test") }
+    colon2   = s{ q(:colon2, q(:const, atom), atom) }
+    expected = s{ q(:const, "Minitest::Test") }
 
     new_sexp = @sexp.replace_sexp(colon2) { |r|
       (_, (_, a), b) = r
@@ -1388,46 +1388,46 @@ class TestSexpMatchers < SexpTestCase
   SEXP = s(:class, :X, nil, s(:defn, :x, s(:args)))
 
   def test_match_subset
-    assert_match s{ child(s(:a)) }, s(:blah, s(:blah, s(:a)))
-    assert_match s{ child(s(:a)) }, s(:a)
+    assert_match s{ child(q(:a)) }, s(:blah, s(:blah, s(:a)))
+    assert_match s{ child(q(:a)) }, s(:a)
   end
 
   def test_match_simple
-    assert_match s{ s(:lit, _) }, s(:lit, 42)
+    assert_match s{ q(:lit, _) }, s(:lit, 42)
   end
 
   def test_match_mismatch_type
-    refute_match s{ s(:xxx, 42) }, s(:lit, 42)
+    refute_match s{ q(:xxx, 42) }, s(:lit, 42)
   end
 
   def test_match_mismatch_data
-    refute_match s{ s(:lit, 24) }, s(:lit, 42)
+    refute_match s{ q(:lit, 24) }, s(:lit, 42)
   end
 
   def test_match_mismatch_length_shorter
-    refute_match s{ s(:a, :b) }, s(:a, :b, :c)
+    refute_match s{ q(:a, :b) }, s(:a, :b, :c)
   end
 
   def test_match_mismatch_length_longer
-    refute_match s{ s(:a, :b, :c) }, s(:a, :b)
+    refute_match s{ q(:a, :b, :c) }, s(:a, :b)
   end
 
   def test_match_wild
-    assert_match s{ s(:class, _, _, _) }, SEXP
+    assert_match s{ q(:class, _, _, _) }, SEXP
   end
 
   def test_match_rest_same_length
-    assert_match s{ s(:class, _, _, ___) }, SEXP
+    assert_match s{ q(:class, _, _, ___) }, SEXP
   end
 
   def test_match_rest_diff_length
     skip_if_strict
 
-    assert_match s{ s(:class, ___) }, SEXP
+    assert_match s{ q(:class, ___) }, SEXP
   end
 
   def test_match_reversed
-    assert_match SEXP, s{ s(:class, _, _, ___) }
+    assert_match SEXP, s{ q(:class, _, _, ___) }
   end
 
   def assert_match_case pat, data
@@ -1440,7 +1440,7 @@ class TestSexpMatchers < SexpTestCase
   end
 
   def test_match_case
-    assert_match_case s{ s(:class, _, _, ___) }, SEXP
+    assert_match_case s{ q(:class, _, _, ___) }, SEXP
   end
 
   # NOTE: eqt is =~ (equal-tilde)
@@ -1498,12 +1498,12 @@ class TestSexpMatchers < SexpTestCase
   l_cls = s(:class, :X, nil,
             s(:something_in_between),
             s(:cdecl, :Y, s(:hash, s(:lit, :a), s(:lit, 1))))
-  p_cls1 = s{ s(:class, ___) & include(s(:cdecl, _, s(:hash, ___))) }
-  p_cls2 = s{ s(:class, _, _, s(:cdecl, _, s(:hash, ___))) }
+  p_cls1 = s{ q(:class, ___) & include(q(:cdecl, _, q(:hash, ___))) }
+  p_cls2 = s{ q(:class, _, _, q(:cdecl, _, q(:hash, ___))) }
 
   x, o = true, false
-  TestMatcherDirectMatch       = cmt x, x, o, x, l_a,   s{ s(:a) }
-  TestMatcherSubtree           = cmt x, x, o, x, l_abc, s{ s(:c) }
+  TestMatcherDirectMatch       = cmt x, x, o, x, l_a,   s{ q(:a) }
+  TestMatcherSubtree           = cmt x, x, o, x, l_abc, s{ q(:c) }
   TestMatcherSubtreeType       = cmt x, x, o, x, l_abc, s{ t(:c) }
   TestMatcherDisparateSubtree  = cmt x, x, o, x, l_cls, p_cls1
   TestMatcherDisparateSubtree2 = cmt o, o, o, o, l_cls, p_cls2 # TODO: make pass
@@ -1541,15 +1541,15 @@ class TestSexpMatcherParser < Minitest::Test
 
   test_parse "nothing",  nil,                             ""
   test_parse "nil",      delay{ nil },                        "nil"
-  test_parse "empty",    delay{ s() },                        "()"
-  test_parse "simple",   delay{ s(:a) },                      "(a)"
-  test_parse "number",   delay{ s(:a, 42) },                  "(a 42)"
-  test_parse "string",   delay{ s(:a, "s") },                 "(a \"s\")"
-  test_parse "compound", delay{ s(:b) },                      "(a) (b)"
-  test_parse "complex",  delay{ s(:a, _, s(:b, :cde), ___) }, "(a _ (b cde) ___)"
-  test_parse "type",     delay{ s(:a, t(:b)) },               "(a [t b])"
-  test_parse "match",    delay{ s(:a, m(/b/)) },              "(a [m /b/])"
-  test_parse "not_atom", delay{ s(:atom) },                   "(atom)"
+  test_parse "empty",    delay{ q() },                        "()"
+  test_parse "simple",   delay{ q(:a) },                      "(a)"
+  test_parse "number",   delay{ q(:a, 42) },                  "(a 42)"
+  test_parse "string",   delay{ q(:a, "s") },                 "(a \"s\")"
+  test_parse "compound", delay{ q(:b) },                      "(a) (b)"
+  test_parse "complex",  delay{ q(:a, _, q(:b, :cde), ___) }, "(a _ (b cde) ___)"
+  test_parse "type",     delay{ q(:a, t(:b)) },               "(a [t b])"
+  test_parse "match",    delay{ q(:a, m(/b/)) },              "(a [m /b/])"
+  test_parse "not_atom", delay{ q(:atom) },                   "(atom)"
   test_parse "atom",     delay{ atom },                       "[atom]"
 
   test_bad_parse "open_sexp",   "(a"
