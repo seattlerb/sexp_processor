@@ -1,5 +1,3 @@
-require "sexp"
-
 class Sexp #:nodoc:
   ##
   # Verifies that +pattern+ is a Matcher and then dispatches to its
@@ -396,15 +394,14 @@ class Sexp #:nodoc:
       # Create a new Parser instance on +s+
 
       def initialize s
-        self.tokens = []
-        lex s
+        self.tokens = lex s
       end
 
       ##
       # Converts +s+ into a stream of tokens and adds them to +tokens+.
 
       def lex s
-        tokens.concat s.scan(%r%[()\[\]]|\"[^"]*\"|/[^/]*/|[\w-]+%) # "
+        s.scan %r%[()\[\]]|\"[^"]*\"|/[^/]*/|:?[\w?!=~-]+%
       end
 
       ##
@@ -442,8 +439,8 @@ class Sexp #:nodoc:
       #        | /^\/(.*)\/$/:re             => Regexp.new re[0]
       #        | /^"(.*)"$/:s                => String.new s[0]
       #        | NAME:name                   => name.to_sym
-      #   NAME : /\w+/
-      #    CMD : "t" | "m" | "atom"
+      #   NAME : /:?[\w?!=~-]+/
+      #    CMD : "t" | "m" | "atom" | "not?"
 
       def parse_sexp
         token = next_token
@@ -468,8 +465,8 @@ class Sexp #:nodoc:
           Regexp.new re
         when /^"(.*)"$/ then
           $1
-        when /^\w+$/ then
-          token.to_sym
+        when /^:?([\w?!=~-]+)$/ then
+          $1.to_sym
         else
           raise SyntaxError, "unhandled token: %p" % [token]
         end
@@ -491,7 +488,7 @@ class Sexp #:nodoc:
       ##
       # A collection of allowed commands to convert into matchers.
 
-      ALLOWED = [:t, :m, :atom].freeze
+      ALLOWED = [:t, :m, :atom, :not?].freeze
 
       ##
       # Parses a balanced command. A command is denoted by square

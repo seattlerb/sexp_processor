@@ -1574,6 +1574,8 @@ class TestSexpMatcherParser < Minitest::Test
     lambda { s(&b) }
   end
 
+  re = /(?-mix:\Aa\Z)|(?-mix:\Ab\Z)|(?-mix:\Ac\Z)/ # [m a b c]
+
   test_parse "nothing",  nil,                             ""
   test_parse "nil",      delay{ nil },                        "nil"
   test_parse "empty",    delay{ q() },                        "()"
@@ -1586,6 +1588,15 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "match",    delay{ q(:a, m(/b/)) },              "(a [m /b/])"
   test_parse "not_atom", delay{ q(:atom) },                   "(atom)"
   test_parse "atom",     delay{ atom },                       "[atom]"
+  test_parse "match_n",  delay{ m(re) },                      "[m a b c]"
+  test_parse "ne",       delay{ q(:call, _, :!=, _) },        "(call _ != _)"
+  test_parse "eq",       delay{ q(:call, _, :==, _) },        "(call _ == _)"
+  test_parse "not",      delay{ q(:call, _, :"!")   },        "(call _ !)"
+  test_parse "eh",       delay{ q(:call, _, :include?, _) },  "(call _ include? _)"
+  test_parse "under",    delay{ q(:call, nil, :_, _) },       "(call nil :_ _)"
+  test_parse "sym_nil",  delay{ q(:call, nil, :nil, _) },     "(call nil :nil _)"
+  # M::Not.new(M.q(:a)), s{ not?(q(:a)) }
+  test_parse "not?",     delay{ not?(m(/^_$/)) }, "[not? [m /^_$/]]"
 
   test_bad_parse "open_sexp",   "(a"
   test_bad_parse "closed_sexp", "a)"
