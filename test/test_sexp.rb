@@ -1150,6 +1150,41 @@ class TestSexpSearch < SexpTestCase
     MR.new sexp.deep_clone, hash
   end
 
+  def test_sexp_hash
+    s1 = s(:a)
+    s2 = s(nil)
+    refute_equal s1.hash, s2.hash
+  end
+
+  def test_matcher_inspect
+    pat1 = M.parse "(a [m /b/] (c))"
+
+    assert_equal "q(:a, m(/b/), q(:c))", pat1.inspect
+  end
+
+  def test_matcher_hash
+    a = M::Pattern.new(/x/) # M.parse "[m /x/]"
+    b = M::Atom.new         # M.parse "_"
+
+    refute_operator a, :eql?, b
+    refute_equal a.hash, b.hash
+
+    h = {}
+    h[a] = true
+    refute_operator h, :key?, b
+
+    # original problem:
+    a = M.parse "(call nil assert_equal (true) (call _ [m /include./] _))"
+    b = M.parse "(call nil assert_equal (true) (call _ _              _))"
+
+    refute_operator a, :eql?, b
+    refute_equal a.hash, b.hash
+
+    h = {}
+    h[a] = true
+    refute_operator h, :key?, b
+  end
+
   def test_slash_simple
     act = sexp / s{ q(:class, atom, _, ___) }
 

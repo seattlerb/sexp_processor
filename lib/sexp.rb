@@ -69,6 +69,14 @@ class Sexp < Array # ZenTest FULL
     obj.class == self.class and super # only because of a bug in ruby
   end
 
+  def eql? o
+    self.class == o.class && super
+  end
+
+  def hash
+    [self.class, *self].hash
+  end
+
   ##
   # Returns true if the node_type is +array+ or +args+.
   #
@@ -1208,6 +1216,14 @@ class Sexp #:nodoc:
       q.group 1, "m(", ")" do
         q.pp pattern
       end
+    end
+
+    def eql? o
+      super and self.pattern.eql? o.pattern
+    end
+
+    def hash
+      [super, pattern].hash
     end
   end
 
