@@ -1,3 +1,16 @@
+=== 4.13.0 / 2019-09-24
+
+* 4 minor enhancements:
+
+  * Added Sexp.q (query) and deprecated Sexp.s to distinguish better and match inspect output.
+  * Extended Sexp::Matcher::Parser to allow `not?` patterns.
+  * Extended Sexp::Matcher::Parser to cover more method names.
+  * Split out all pattern-oriented code to sexp_matcher.rb.
+
+* 1 bug fix:
+
+  * Fixed bug w/ ruby's Array#eql? and #hash not looking at ivars.
+
 === 4.12.1 / 2019-06-03
 
 * 1 minor enhancement:
