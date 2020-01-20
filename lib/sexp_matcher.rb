@@ -197,6 +197,15 @@ class Sexp #:nodoc:
   end
 
   ##
+  # Matches an atom of the specified +klass+ (or module).
+  #
+  # See Pattern for examples.
+
+  def self.k klass
+    Klass.new klass
+  end
+
+  ##
   # Defines a family of objects that can be used to match sexps to
   # certain types of patterns, much like regexps can be used on
   # strings. Generally you won't use this class directly.
@@ -438,9 +447,11 @@ class Sexp #:nodoc:
       #        | "_"                         => Sexp._
       #        | /^\/(.*)\/$/:re             => Regexp.new re[0]
       #        | /^"(.*)"$/:s                => String.new s[0]
+      #        | UP_NAME:name                => Object.const_get name
       #        | NAME:name                   => name.to_sym
+      # UP_NAME: /[A-Z]\w*/
       #   NAME : /:?[\w?!=~-]+/
-      #    CMD : "t" | "m" | "atom" | "not?"
+      #    CMD : "t" | "k" | "m" | "atom" | "not?"
 
       def parse_sexp
         token = next_token
@@ -465,6 +476,8 @@ class Sexp #:nodoc:
           Regexp.new re
         when /^"(.*)"$/ then
           $1
+        when /^([A-Z]\w*)$/ then
+          Object.const_get $1
         when /^:?([\w?!=~-]+)$/ then
           $1.to_sym
         else
@@ -488,7 +501,7 @@ class Sexp #:nodoc:
       ##
       # A collection of allowed commands to convert into matchers.
 
-      ALLOWED = [:t, :m, :atom, :not?].freeze
+      ALLOWED = [:t, :m, :k, :atom, :not?].freeze
 
       ##
       # Parses a balanced command. A command is denoted by square
@@ -844,6 +857,29 @@ class Sexp #:nodoc:
 
     def hash
       [super, pattern].hash
+    end
+  end
+
+  ##
+  # Matches any atom that is an instance of the specified class or module.
+  #
+  # examples:
+  #
+  #   s(:lit, 6.28) / s{ q(:lit, k(Float)) }                   #=> [s(:lit, 6.28)]
+
+  class Klass < Pattern
+    def satisfy? o
+      o.kind_of? self.pattern
+    end
+
+    def inspect # :nodoc:
+      "k(%p)" % pattern
+    end
+
+    def pretty_print q # :nodoc:
+      q.group 1, "k(", ")" do
+        q.pp pattern
+      end
     end
   end
 

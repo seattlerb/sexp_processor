@@ -720,11 +720,17 @@ class TestSexpMatcher < SexpTestCase
   end
 
   def test_cls_m
-    assert_equal M::Pattern.new(/a/), s{ m(/a/) }
-    assert_equal M::Pattern.new(/\Aa\Z/), s{ m(:a) }
-    assert_equal M::Pattern.new(/test_\w/), s{ m(/test_\w/) }
     re = Regexp.union [/\w/, /\d/]
-    assert_equal M::Pattern.new(re), s{ m(/\w/,/\d/) }
+
+    assert_equal M::Pattern.new(/a/),       s{ m(/a/)       }
+    assert_equal M::Pattern.new(/\Aa\Z/),   s{ m(:a)        }
+    assert_equal M::Pattern.new(/test_\w/), s{ m(/test_\w/) }
+    assert_equal M::Pattern.new(re),        s{ m(/\w/,/\d/) }
+  end
+
+  def test_cls_k
+    assert_equal M::Klass.new(Float),       s{ k(Float)     }
+    assert_operator M::Klass.new(Float), :===, 6.28
   end
 
   def test_amp
@@ -1595,6 +1601,8 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "sym_nil",  delay{ q(:call, nil, :nil, _) },     "(call nil :nil _)"
   # M::Not.new(M.q(:a)), s{ not?(q(:a)) }
   test_parse "not?",     delay{ not?(m(/^_$/)) }, "[not? [m /^_$/]]"
+
+  test_parse "klass",  delay{ q(:lit, k(Float)) },            "(lit [k Float])"
 
   test_bad_parse "open_sexp",   "(a"
   test_bad_parse "closed_sexp", "a)"
