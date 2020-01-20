@@ -1601,6 +1601,7 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "sym_nil",  delay{ q(:call, nil, :nil, _) },     "(call nil :nil _)"
   test_parse "not?",     delay{ not?(m(/^_$/)) },             "[not? [m /^_$/]]"
   test_parse "not2",     delay{ -_ },                         "[- _]"
+  test_parse "any",      delay{ q(:a) | q(:b) },              "[any (a) (b)]"
 
   test_parse "klass",    delay{ q(:lit, k(Float)) },          "(lit [k Float])"
 

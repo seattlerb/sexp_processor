@@ -454,7 +454,7 @@ class Sexp #:nodoc:
       #        | NAME:name                   => name.to_sym
       # UP_NAME: /[A-Z]\w*/
       #   NAME : /:?[\w?!=~-]+/
-      #    CMD : "t" | "k" | "m" | "atom" | "not?" | "-"
+      #    CMD : "t" | "k" | "m" | "atom" | "not?" | "-" | "any"
 
       def parse_sexp
         token = next_token
@@ -504,7 +504,7 @@ class Sexp #:nodoc:
       ##
       # A collection of allowed commands to convert into matchers.
 
-      ALLOWED = [:t, :m, :k, :atom, :not?, :-].freeze
+      ALLOWED = [:t, :m, :k, :atom, :not?, :-, :any].freeze
 
       ##
       # Parses a balanced command. A command is denoted by square
