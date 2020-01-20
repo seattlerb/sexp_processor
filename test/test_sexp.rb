@@ -1595,14 +1595,14 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "match_n",  delay{ m(re) },                      "[m a b c]"
   test_parse "ne",       delay{ q(:call, _, :!=, _) },        "(call _ != _)"
   test_parse "eq",       delay{ q(:call, _, :==, _) },        "(call _ == _)"
-  test_parse "not",      delay{ q(:call, _, :"!")   },        "(call _ !)"
+  test_parse "not_call", delay{ q(:call, _, :"!")   },        "(call _ !)"
   test_parse "eh",       delay{ q(:call, _, :include?, _) },  "(call _ include? _)"
   test_parse "under",    delay{ q(:call, nil, :_, _) },       "(call nil :_ _)"
   test_parse "sym_nil",  delay{ q(:call, nil, :nil, _) },     "(call nil :nil _)"
-  # M::Not.new(M.q(:a)), s{ not?(q(:a)) }
-  test_parse "not?",     delay{ not?(m(/^_$/)) }, "[not? [m /^_$/]]"
+  test_parse "not?",     delay{ not?(m(/^_$/)) },             "[not? [m /^_$/]]"
+  test_parse "not2",     delay{ -_ },                         "[- _]"
 
-  test_parse "klass",  delay{ q(:lit, k(Float)) },            "(lit [k Float])"
+  test_parse "klass",    delay{ q(:lit, k(Float)) },          "(lit [k Float])"
 
   test_bad_parse "open_sexp",   "(a"
   test_bad_parse "closed_sexp", "a)"
