@@ -1,3 +1,12 @@
+=== 4.14.0 / 2020-02-06
+
+* 4 minor enhancements:
+
+  * Added '-' as an alias for the 'not?' pattern matching command.
+  * Added Klass matcher to match on types.
+  * Added `k` shortcut for Klass & hooked into Sexp::Matcher.parse.
+  * Added any matcher to pattern parser.
+
 === 4.13.0 / 2019-09-24
 
 * 4 minor enhancements:
