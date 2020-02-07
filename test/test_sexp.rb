@@ -1604,6 +1604,7 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "any",      delay{ q(:a) | q(:b) },              "[any (a) (b)]"
 
   test_parse "klass",    delay{ q(:lit, k(Float)) },          "(lit [k Float])"
+  test_parse "const",    delay{ q(:const, :Float) },          "(const :Float)"
 
   test_bad_parse "open_sexp",   "(a"
   test_bad_parse "closed_sexp", "a)"
