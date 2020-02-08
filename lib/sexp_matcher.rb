@@ -156,8 +156,9 @@ class Sexp #:nodoc:
     Not.new arg
   end
 
-  mc = (class << self; self; end)
-  mc.alias_method :-, :not?
+  class << self
+    alias :- :not?
+  end
 
   # TODO: add Sibling factory method?
 
