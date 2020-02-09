@@ -1,3 +1,10 @@
+=== 4.14.1 / 2020-02-09
+
+* 2 bug fixes:
+
+  * Declared support for ruby 2.2+ to gemspec.
+  * Fixed alias for `not?` to `-` for ruby <= 2.4. (nard-tech).
+
 === 4.14.0 / 2020-02-06
 
 * 4 minor enhancements:
