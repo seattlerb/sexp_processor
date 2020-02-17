@@ -906,7 +906,7 @@ class TestChild < MatcherTestCase
   end
 
   def sexp
-    s(:x, s(:a))
+    s(:x, s(:b), s(:a))
   end
 
   def bad_sexp
@@ -926,6 +926,8 @@ class TestChild < MatcherTestCase
 
   def test_satisfy_eh_by_child
     assert_satisfy matcher, s(:a)
+    assert_satisfy matcher, sexp
+    refute_satisfy matcher, bad_sexp
   end
 end
 
@@ -1602,6 +1604,7 @@ class TestSexpMatcherParser < Minitest::Test
   test_parse "not?",     delay{ not?(m(/^_$/)) },             "[not? [m /^_$/]]"
   test_parse "not2",     delay{ -_ },                         "[- _]"
   test_parse "any",      delay{ q(:a) | q(:b) },              "[any (a) (b)]"
+  test_parse "child",    delay{ child(q(:str, m(/woot/))) },  "[child (str [m /woot/])]"
 
   test_parse "klass",    delay{ q(:lit, k(Float)) },          "(lit [k Float])"
   test_parse "const",    delay{ q(:const, :Float) },          "(const :Float)"
