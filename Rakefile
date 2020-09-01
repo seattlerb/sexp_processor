@@ -11,7 +11,7 @@ Hoe.add_include_dirs("../../ruby_parser/dev/lib")
 Hoe.spec 'sexp_processor' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  require_ruby_version "~> 2.2"
+  require_ruby_version [">= 2.1", "< 3.1"]
 
   license "MIT"
 end
