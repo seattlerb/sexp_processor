@@ -193,6 +193,12 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal(3, count, "must find 3 a's in #{@sexp.inspect}")
   end
 
+  def test_each_of_type_no_block
+    @sexp = s(:a, s(:b), s(:c), :d)
+
+    assert_equal [s(:b)], @sexp.each_of_type(:b).to_a
+  end
+
   def test_equals2_array
     refute_equal @sexp, [1, 2, 3]        # Sexp == Array
     assert_raises Minitest::Assertion do # Array == Sexp.

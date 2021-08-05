@@ -122,7 +122,7 @@ class Sexp < Array # ZenTest FULL
   # Enumeratates the sexp yielding to +b+ when the node_type == +t+.
 
   def each_of_type t, &b
-    return enum_for(:each_of_type) unless block_given?
+    return enum_for(:each_of_type, t) unless block_given?
 
     each_sexp do | sexp |
       sexp.each_of_type(t, &b)
