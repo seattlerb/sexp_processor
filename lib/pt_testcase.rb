@@ -150,7 +150,8 @@ class ParseTreeTestCase < Minitest::Test
 
         before_process_hook klass, node, data, input_name, output_name
         refute_nil data[input_name], "testcase does not exist?"
-        @result = processor.process input
+        timeout = (ENV["RP_TIMEOUT"] || 10).to_i
+        @result = processor.process input, "(string)", timeout
         assert_equal(expected, @result,
                      "failed on input: #{data[input_name].inspect}")
         after_process_hook klass, node, data, input_name, output_name
@@ -158,7 +159,11 @@ class ParseTreeTestCase < Minitest::Test
         extra_input.each do |extra|
           processor.process(extra)
         end
-        extra = processor.extra_methods rescue []
+        extra = if processor.respond_to?(:extra_methods) then
+                  processor.extra_methods
+                else
+                  []
+                end
         assert_equal extra_expected, extra
       end
     end
