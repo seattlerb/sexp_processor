@@ -31,13 +31,15 @@ class Sexp < Array # ZenTest FULL
     super(args)
   end
 
+  alias _concat concat
+
   ##
   # Creates a new Sexp from Array +a+.
 
   def self.from_array a
     ary = Array === a ? a : [a]
 
-    self.new.concat(ary.map { |x|
+    self.new._concat(ary.map { |x|
                case x
                when Sexp
                  x
@@ -54,7 +56,7 @@ class Sexp < Array # ZenTest FULL
   # same +file+, +line+, and +comment+ as self.
 
   def new(*body)
-    r = self.class.new.concat(body) # ensures a sexp from map
+    r = self.class.new._concat(body) # ensures a sexp from map
     r.file     = self.file     if self.file
     r.line     = self.line     if self.line
     r.comments = self.comments if self.comments
@@ -62,7 +64,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def map &blk # :nodoc:
-    self.new.concat(super(&blk)) # ensures a sexp from map
+    self.new._concat(super(&blk)) # ensures a sexp from map
   end
 
   def == obj # :nodoc:
@@ -74,7 +76,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def hash
-    [self.class, *self].hash
+    @hash ||= [self.class, *self].hash
   end
 
   ##
@@ -93,7 +95,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
-  # Recursively enumerates the sexp yielding to +block+ for every element.
+  # Recursively enumerates the sexp yielding to +block+ for every sub-Sexp.
   #
   # Returning :skip will stop traversing that subtree:
   #
@@ -131,7 +133,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   ##
-  # Recursively enumerates all sub-sexps skipping non-Sexp elements.
+  # Enumerates all sub-sexps skipping non-Sexp elements.
 
   def each_sexp
     return enum_for(:each_sexp) unless block_given?
@@ -289,11 +291,11 @@ class Sexp < Array # ZenTest FULL
   # the values without the node type.
 
   def sexp_body from = 1
-    self.new.concat(self[from..-1] || [])
+    self.new._concat(self[from..-1] || [])
   end
 
   ##
-  # Returns the Sexp body, ie the values without the node type.
+  # Sets the Sexp body to new content.
 
   def sexp_body= v
     self[1..-1] = v
@@ -362,6 +364,14 @@ class Sexp < Array # ZenTest FULL
   end
 
   alias to_s inspect # :nodoc:
+
+  ##
+  # Return the value (last item) of a single element sexp (eg `s(:lit, 42)`).
+
+  def value
+    raise "multi item sexp" if size > 2
+    last
+  end
 end
 
 ##

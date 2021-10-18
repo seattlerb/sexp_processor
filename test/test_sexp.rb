@@ -660,6 +660,18 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal DEEP_EXP, act.map { |k, _| k }
   end
 
+  def test_deep_each_sexp_recursive
+    sexp = s(:array, s(:lit, 1), nil, 42, s(:array, s(:lit, 2)))
+
+    result = []
+    sexp.deep_each { |x| result << x.last if x.sexp_type == :lit }
+    assert_equal [1, 2], result
+
+    result = []
+    sexp.each_of_type(:lit) { |x| result << x.last }
+    assert_equal [1, 2], result
+  end
+
   def test_deep_each_skip
     exp = DEEP_EXP.first(3) + DEEP_EXP.last(4)
     act = []

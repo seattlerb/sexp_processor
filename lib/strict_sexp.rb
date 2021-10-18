@@ -36,6 +36,7 @@
 # 4 = sexp <<         => no
 
 class Sexp
+  # alias :_concat     :concat in sexp.rb so we have access to the original
   alias :safe_idx   :[]
   alias :safe_asgn  :[]=
   alias :sexp_type= :sexp_type=
@@ -43,9 +44,10 @@ class Sexp
   alias :shift :shift
 
   def self.nuke_method name, level
+    return unless __strict >= level
     define_method name do |*args|
       raise "no mutation allowed on sexps: %s.%s %s" % [self, name, args]
-    end if __strict >= level
+    end
   end
 
   def self.__strict
@@ -87,7 +89,7 @@ class Sexp
 
   nuke_method :collect!, 4
   nuke_method :compact!, 4
-  # nuke_method :concat,   4 # HACK: using self.class.new.concat(...) for speed 
+  nuke_method :concat,   4 # HACK: using self.class.new.concat(...) for speed
   nuke_method :flatten!, 4
   nuke_method :map!,     4
   nuke_method :pop,      4
@@ -111,7 +113,7 @@ class Sexp
   end
 
   def sexp_body from = 1
-    self.new.concat(safe_idx(from..-1) || [])
+    self.new._concat(safe_idx(from..-1) || [])
   end
 
   def sexp_type= v
@@ -122,5 +124,25 @@ class Sexp
     self.safe_asgn 1..-1, v
   end
 end unless Sexp.new.respond_to? :safe_asgn if ENV["STRICT_SEXP"]
+
+if ENV["SP_DEBUG"] && !ENV["STRICT_SEXP"] then
+  class Sexp
+    mutators = %i[
+                  []= clear collect! compact! concat delete delete_at
+                  delete_if drop drop_while fill flatten! replace insert
+                  keep_if map! pop push reject! reverse! rotate! select!
+                  shift shuffle! slice! sort! sort_by! transpose uniq!
+                  unshift
+                 ]
+
+    mutators.each do |method|
+      define_method method do |*|
+        warn "Sexp modified by %p at %s" % [__method__, caller.first] if
+          $VERBOSE or (defined?(@hash) and @hash)
+        super
+      end
+    end
+  end
+end
 
 # :startdoc:
