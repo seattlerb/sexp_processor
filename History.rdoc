@@ -1,3 +1,18 @@
+=== 4.16.0 / 2021-10-27
+
+* 4 minor enhancements:
+
+  * Added Sexp#value (pushed up from ruby_parser).
+  * Aliased Sexp#concat to #_concat and use that so it can be overridden.
+  * Cache the #hash result.
+  * StrictSexp mode (4) now covers concat.
+
+* 3 bug fixes:
+
+  * Fix some doco on each_sexp to clarify that it is not recursive.
+  * Fixed a bug calling enum_for when using each_of_type w/ no block.
+  * Minor fixes to pt_testcase.rb for custom timeouts and better error handling.
+
 === 4.15.3 / 2021-05-15
 
 * 1 minor enhancement:
