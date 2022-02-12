@@ -34,6 +34,12 @@ class Examples
 end
 
 class ParseTreeTestCase < Minitest::Test
+  all_versions  = %w[18 19 20 21 22 23 24 25 26 27 30 31]
+  most_versions = all_versions.drop(1)
+
+  TEST_SUFFIX = "_#{most_versions.join "_"}"
+  VER_RE      = /(#{Regexp.union(*all_versions)})/
+
   attr_accessor :processor # to be defined by subclass
 
   def setup
@@ -77,7 +83,7 @@ class ParseTreeTestCase < Minitest::Test
   end
 
   def self.add_19tests name, hash
-    add_tests "#{name}__19_20_21_22_23_24_25_26_27_30", hash # HACK?
+    add_tests "#{name}_#{TEST_SUFFIX}", hash # HACK?
   end
 
   def self.add_19edgecases ruby, sexp, cases
@@ -101,8 +107,6 @@ class ParseTreeTestCase < Minitest::Test
     verbose = nonverbose + "_mri_verbose_flag"
     testcases[verbose][klass] = testcases[nonverbose][klass]
   end
-
-  VER_RE = "(1[89]|2[01234567]|3[0])"
 
   def self.generate_test klass, node, data, input_name, output_name
     klass.send :define_method, "test_#{node}" do
