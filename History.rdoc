@@ -1,3 +1,9 @@
+=== 4.16.1 / 2022-04-09
+
+* 1 minor enhancement:
+
+  * Reworked ParseTreeTestCase's notion of versions to make it easier to extend.
+
 === 4.16.0 / 2021-10-27
 
 * 4 minor enhancements:
