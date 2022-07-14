@@ -1072,7 +1072,7 @@ class ParseTreeTestCase < Minitest::Test
             "Ruby2Ruby"    => "-(2 ** 31)")
 
   add_tests("case",
-            "Ruby"         => "var = 2\nresult = \"\"\ncase var\nwhen 1 then\n  puts(\"something\")\n  result = \"red\"\nwhen 2, 3 then\n  result = \"yellow\"\nwhen 4 then\n  # do nothing\nelse\n  result = \"green\"\nend\ncase result\nwhen \"red\" then\n  var = 1\nwhen \"yellow\" then\n  var = 2\nwhen \"green\" then\n  var = 3\nelse\n  # do nothing\nend\n",
+            "Ruby"         => "var = 2\nresult = \"\"\ncase var\nwhen 1 then\n  puts(\"something\")\n  result = \"red\"\nwhen 2, 3 then\n  result = \"yellow\"\nwhen 4 then\n  # do nothing\nelse\n  result = \"green\"\nend\ncase result\nwhen \"red\" then\n  var = 1\nwhen \"yellow\" then\n  var = 2\nwhen \"green\" then\n  var = 3\nend\n",
             "ParseTree"    => s(:block,
                                 s(:lasgn, :var, s(:lit, 2)),
                                 s(:lasgn, :result, s(:str, "")),
@@ -1124,7 +1124,7 @@ class ParseTreeTestCase < Minitest::Test
                                   s(:lasgn, :result, s(:lit, 7)))))
 
   add_tests("case_nested_inner_no_expr",
-            "Ruby"         => "case a\nwhen b then\n  case\n  when (d and e) then\n    f\n  else\n    # do nothing\n  end\nelse\n  # do nothing\nend",
+            "Ruby"         => "case a\nwhen b then\n  case\n  when (d and e) then\n    f\n  end\nend",
             "ParseTree"    => s(:case, s(:call, nil, :a),
                                 s(:when,
                                   s(:array, s(:call, nil, :b)),
