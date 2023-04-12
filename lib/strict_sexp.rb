@@ -83,8 +83,9 @@ class Sexp
     self.safe_asgn i, v
   end
 
-  def first
-    raise "use sexp_type"
+  def first(n = nil)
+    raise "use sexp_type" unless n
+    super
   end
 
   nuke_method :collect!, 4
@@ -136,10 +137,10 @@ if ENV["SP_DEBUG"] && !ENV["STRICT_SEXP"] then
                  ]
 
     mutators.each do |method|
-      define_method method do |*|
+      define_method method do |*args|
         warn "Sexp modified by %p at %s" % [__method__, caller.first] if
-          $VERBOSE or (defined?(@hash) and @hash)
-        super
+          ENV["VERBOSE"] or (defined?(@hash) and @hash)
+        super(*args)
       end
     end
   end
