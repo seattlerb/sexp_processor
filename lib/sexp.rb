@@ -13,6 +13,11 @@ class Sexp < Array # ZenTest FULL
   attr_writer :line
 
   ##
+  # Set the maximum line number for this sexp. Often set by ruby_parser.
+
+  attr_writer :line_max
+
+  ##
   # Accessors for the file. Usually set by ruby_parser.
 
   attr_accessor :file
@@ -59,6 +64,7 @@ class Sexp < Array # ZenTest FULL
     r = self.class.new._concat(body) # ensures a sexp from map
     r.file     = self.file     if self.file
     r.line     = self.line     if self.line
+    r.line_max = self.line_max if defined?(@line_max)
     r.comments = self.comments if self.comments
     r
   end
@@ -233,7 +239,7 @@ class Sexp < Array # ZenTest FULL
   # Returns the maximum line number of the children of self.
 
   def line_max
-    @line_max ||= self.deep_each.map(&:line).max
+    @line_max ||= self.deep_each.map(&:line).compact.max
   end
 
   ##
@@ -388,4 +394,4 @@ def s *args, &blk
 end
 
 require "sexp_matcher" unless defined? Sexp::Matcher
-require "strict_sexp" if ENV["STRICT_SEXP"].to_i > 0
+require "strict_sexp" if ENV["SP_DEBUG"] || ENV["STRICT_SEXP"].to_i > 0
