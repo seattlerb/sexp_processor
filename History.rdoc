@@ -1,3 +1,16 @@
+=== 4.17.0 / 2023-05-03
+
+* 2 minor enhancements:
+
+  * Added Sexp#line_max=.
+  * Will load strict_sexp if $SP_DEBUG is set.
+
+* 3 bug fixes:
+
+  * Sexp#line_max lazy accessor now compacts.
+  * Sexp#new copies line_max if defined.
+  * strict_sexp.rb: #first can take an int arg. Fixed mutator wrappers to pass args.
+
 === 4.16.1 / 2022-04-09
 
 * 1 minor enhancement:
