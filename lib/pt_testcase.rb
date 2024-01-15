@@ -34,7 +34,7 @@ class Examples
 end
 
 class ParseTreeTestCase < Minitest::Test
-  all_versions  = %w[18 19 20 21 22 23 24 25 26 27 30 31 32]
+  all_versions  = %w[18 19 20 21 22 23 24 25 26 27 30 31 32 33]
   most_versions = all_versions.drop(1)
 
   TEST_SUFFIX = "_#{most_versions.join "_"}"
