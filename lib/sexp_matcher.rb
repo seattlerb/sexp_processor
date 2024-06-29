@@ -370,7 +370,7 @@ class Sexp #:nodoc:
     end
 
     def inspect # :nodoc:
-      s = super
+      s = super.dup
       s[0] = "q"
       s
     end
