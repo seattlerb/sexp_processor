@@ -1,3 +1,9 @@
+=== 4.17.2 / 2024-07-09
+
+* 1 bug fix:
+
+  * Fix errors created when string literals are frozen (in 2.7 only??).
+
 === 4.17.1 / 2024-01-15
 
 * 1 minor enhancement:
