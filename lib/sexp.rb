@@ -270,7 +270,7 @@ class Sexp < Array # ZenTest FULL
   end
 
   def pretty_print q # :nodoc:
-    nnd = ")"
+    nnd = +")"
     nnd << ".line(#{line})" if line && ENV["VERBOSE"]
 
     q.group(1, "s(", nnd) do
