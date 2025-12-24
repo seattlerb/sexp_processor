@@ -1,3 +1,9 @@
+=== 4.17.5 / 2025-12-24
+
+* 1 minor enhancement:
+
+  * Bumped ruby to 3.2+.
+
 === 4.17.4 / 2025-09-02
 
 This release was brought to you by ScotRail free WiFi!
