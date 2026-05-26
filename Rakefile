@@ -5,6 +5,7 @@ require 'hoe'
 
 Hoe.plugin :seattlerb
 Hoe.plugin :rdoc
+Hoe.plugin :cov
 
 Hoe.add_include_dirs("../../ruby_parser/dev/lib")
 

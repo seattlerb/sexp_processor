@@ -218,7 +218,7 @@ class SexpProcessor
     return nil if exp.nil?
 
     unless Sexp === exp then
-      raise SexpTypeError, "exp must be a Sexp, was #{exp.class}:#{exp.inspect}"
+      raise SexpTypeError, "exp must be a Sexp, was %s:%p" % [exp.class, exp]
     end
 
     if self.context.empty? then
@@ -296,7 +296,7 @@ class SexpProcessor
             end
             # result << sub_result
             result = result.class.new(*result, sub_result) # HACK
-          end
+          end # until empty
 
           # NOTE: this is costly, but we are in the generic processor
           # so we shouldn't hit it too much with RubyToC stuff at least.
@@ -325,8 +325,8 @@ class SexpProcessor
   rescue StandardError => err
     return @exceptions[type].call self, exp, err if @exceptions.key? type
 
-    warn "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if
-      $DEBUG
+    warn "%s Exception thrown while processing %s for sexp %p %p" % \
+      [err.class, type, exp, caller] if $DEBUG
 
     raise
   end

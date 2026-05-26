@@ -125,22 +125,38 @@ class TestSexpProcessor < Minitest::Test
     assert_equal(@processor.expected.new(42), @processor.process(a))
   end
 
-  def test_process_not_sexp
+  def test_process__return_not_sexp
     @processor = TestProcessor.new
     @processor.warn_on_default = false
 
-    assert_raises SexpTypeError do
+    e = assert_raises SexpTypeError do
       @processor.process(s(:broken, 1, 2, 3))
     end
+
+    assert_equal "Result of broken must be a Sexp, was Array:[:broken, 1, 2, 3]", e.message
   end
+
+  def test_process__input_not_sexp
+    @processor = TestProcessor.new
+    @processor.warn_on_default = false
+
+    e = assert_raises SexpTypeError do
+      @processor.process(42)
+    end
+
+    assert_equal "exp must be a Sexp, was Integer:42", e.message
+  end
+
 
   def test_process_unsupported_wrong
     @processor = TestProcessor.new
     @processor.unsupported << :strip
 
-    assert_raises UnsupportedNodeError do
+    e = assert_raises UnsupportedNodeError do
       @processor.process(s(:whatever))
     end
+
+    assert_equal "[:strip] shouldn't be in @unsupported", e.message
   end
 
   def test_unsupported_equal

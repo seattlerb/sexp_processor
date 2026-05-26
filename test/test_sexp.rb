@@ -1,14 +1,5 @@
 $TESTING = true
 
-if ENV["COV"]
-  require "simplecov"
-  SimpleCov.start do
-    add_filter "lib/sexp_processor"
-    add_filter "test"
-  end
-  warn "Running simplecov"
-end
-
 require "minitest/autorun"
 require "minitest/hell" # beat these up
 require "minitest/benchmark" if ENV["BENCH"]
@@ -157,6 +148,12 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def assert_from_array exp, input
     assert_equal exp, Sexp.from_array(input)
+  end
+
+  def test_cls_s
+    assert_output "", /DEPRECATED/ do
+      assert_equal Sexp.q(42), Sexp.s(42)
+    end
   end
 
   def test_class_from_array
@@ -694,6 +691,16 @@ class TestSexp < SexpTestCase # ZenTest FULL
     skip "TODO?"
     assert_equal M::Not.new(s(:a)), !s(:a)
   end
+
+  def test_value
+    assert_equal 42, s(:lit, 42).value
+  end
+
+  def test_value__multi
+    assert_raises do
+      s(:whatevs, :nope, 42).value
+    end
+  end
 end # TestSexp
 
 class TestSexpMatcher < SexpTestCase
@@ -747,8 +754,13 @@ class TestSexpMatcher < SexpTestCase
   end
 
   def test_cls_k
-    assert_equal M::Klass.new(Float),       s{ k(Float)     }
+    k = s { k(Float) }
+
+    assert_equal    M::Klass.new(Float), k
     assert_operator M::Klass.new(Float), :===, 6.28
+
+    assert_equal "k(Float)", k.inspect
+    assert_equal "k(Float)", k.pretty_inspect.chomp
   end
 
   def test_amp
@@ -1267,16 +1279,22 @@ class TestSexpSearch < SexpTestCase
 
   def test_satisfy_eh_any_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    assert_satisfy s{ any(q(:add, :a, :b), q(:sub, :a, :b)) }, sexp
 
+    assert_satisfy s{ any(q(:add, :a, :b), q(:sub, :a, :b)) }, sexp
     assert_satisfy s{ any(q(atom, :a, :b), q(:sub, :a, :b)) }, sexp
+
+    assert_satisfy sexp, s{ any(q(:add, :a, :b), q(:sub, :a, :b)) }
+    assert_satisfy sexp, s{ any(q(atom, :a, :b), q(:sub, :a, :b)) }
   end
 
   def test_satisfy_eh_all_capture # TODO: remove
     sexp = s(:add, :a, :b)
-    assert_satisfy s{ all(q(_, :a, :b), q(atom, :a, :b)) }, sexp
 
     assert_satisfy s{ all(q(_, :a, :b), q(atom, :a, :b)) }, sexp
+    assert_satisfy s{ all(q(_, :a, :b), q(atom, :a, :b)) }, sexp
+
+    assert_satisfy sexp, s{ all(q(_, :a, :b), q(atom, :a, :b)) }
+    assert_satisfy sexp, s{ all(q(_, :a, :b), q(atom, :a, :b)) }
 
     assert_search 1, sexp, s{ all(q(_, :a, :b), q(atom, :a, :b)) }
   end
