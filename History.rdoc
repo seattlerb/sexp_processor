@@ -1,3 +1,10 @@
+=== 4.17.6 / 2026-09-20
+
+* 2 bug fixes:
+
+  * Improved coverage to 100% for some modules. More to go. Fixed some minor problems.
+  * Minor cleanup in SexpProcessor.
+
 === 4.17.5 / 2025-12-24
 
 * 1 minor enhancement:
